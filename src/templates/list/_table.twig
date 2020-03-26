@@ -1,0 +1,36 @@
+ <div class="tableview">
+
+    <h1>Wpłaty</h1>
+
+    {% if list | length %}
+        <div class="tablecontent">
+            <table class="data fullwidth nowrap">
+                <thead>
+                    <tr>
+                        <th>Projekt</th>
+                        <th>Imię</th>
+                        <th>Nazwisko</th>
+                        <th>Email</th>
+                        <th>Kwota</th>
+                        <th>Rodzaj</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in list %}
+                        <tr>
+                            <td>{{ row.project }}</td>
+                            <td>{{ row.firstName }}</td>
+                            <td>{{ row.lastName }}</td>
+                            <td>{{ row.email }}</td>
+                            <td>{{ row.amount }}</td>
+                            <td>{{ row.isRecurring == '0' ? 'Płatność jednorazowa' : 'Płatność cykliczna' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}    
+        <p>Brak elementów.</p>
+    {% endif %}
+  
+</div>

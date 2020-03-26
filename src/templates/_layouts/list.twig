@@ -1,0 +1,62 @@
+{# @var craft \craft\web\twig\variables\CraftVariable #}
+{#
+/**
+ * pmm-payments plugin for Craft CMS 3.x
+ *
+ * pmm-payments index.twig
+ *
+ * @author    Pleo Digtial
+ * @copyright Copyright (c) 2020 Pleo Digtial
+ * @link      https://pleodigital.com/
+ * @package   Pmmpayments
+ * @since     1.0.0
+ */
+#}
+
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% do view.registerAssetBundle("pleodigital\\pmmpayments\\assetbundles\\pmmpayments\\PmmpaymentsAsset") %}
+{% do view.registerAssetBundle("pleodigital\\pmmpayments\\assetbundles\\paymentscpsection\\PaymentsCPSectionAsset") %}
+
+{# Link for the ? icon at the bottom of the page #}
+{% set docsUrl = "???" %}
+
+{# The title of this CP section #}
+{% set title = "Płatności" %}
+
+{# The URL to this plugin's base CP section #}
+{% set pluginCpUrl = url('pmm-payments') %}
+
+{# Get a URL to an image in our AssetBundle #}
+{% set iconUrl = view.getAssetManager().getPublishedUrl('@pleodigital/pmmpayments/assetbundles/paymentscpsection/dist', true) ~ '/img/Payments-icon.svg' %}
+
+{# Content that should appear in the page header#}
+{# {% block actionButton %}
+    <div class="buttons">
+        <a href="{{ pluginCpUrl }}" class="btn submit add icon">{{ "Click Me!"|t('pmm-payments') }}</a>
+    </div>
+{% endblock %} #}
+
+{% set sidebar %}
+
+    {% set selectedSidebarItem = craft.app.request.getSegment(3) %}
+    {% set baseUrl = 'pmm-payments/list/' %}
+
+    <nav class="last">
+        <ul>
+            <li>
+                <a href="{{ cpUrl(baseUrl~'payu') }}" {% if selectedSidebarItem == 'payu' %}class="sel"{% endif %}>PayU</a>
+            </li>
+            <li>
+                <a href="{{ cpUrl(baseUrl~'paypal') }}" {% if selectedSidebarItem == 'paypal' %}class="sel"{% endif %}>PayPal</a>
+            </li>          
+        </ul>
+    </nav>
+
+{% endset %}
+
+{# The content of the CP Section#}
+{% set content %}    
+    {% include "pmm-payments/list/_table" %}
+{% endset %}

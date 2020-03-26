@@ -1,0 +1,43 @@
+{
+    "name": "pleodigital/pmm-payments",
+    "description": "Payment processing plugin for the Polish Medical Mission",
+    "type": "craft-plugin",
+    "version": "1.0.0",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "pmm-payments"
+    ],
+    "support": {
+        "docs": "???",
+        "issues": "???"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Pleo Digtial",
+            "homepage": "https://pleodigital.com/"
+        }
+    ],
+    "require": {
+        "craftcms/cms": "^3.0.0-RC1"
+    },
+    "autoload": {
+        "psr-4": {
+          "pleodigital\\pmmpayments\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "pmm-payments",
+        "handle": "pmm-payments",
+        "hasCpSettings": true,
+        "hasCpSection": true,
+        "changelogUrl": "???",
+        "components": {
+            "payments": "pleodigital\\pmmpayments\\services\\Payments"
+        },
+        "class": "pleodigital\\pmmpayments\\Pmmpayments"
+    }
+}

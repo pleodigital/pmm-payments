@@ -1,0 +1,20 @@
+{# @var craft \craft\web\twig\variables\CraftVariable #}
+{#
+/**
+ * pmm-payments plugin for Craft CMS
+ *
+ * Payments Widget Body
+ *
+ * @author    Pleo Digtial
+ * @copyright Copyright (c) 2020 Pleo Digtial
+ * @link      https://pleodigital.com/
+ * @package   Pmmpayments
+ * @since     1.0.0
+ */
+#}
+
+{% set iconUrl = view.getAssetManager().getPublishedUrl('@pleodigital/pmmpayments/assetbundles/paymentswidget/dist', true) ~ '/img/Payments-icon.svg' %}
+
+<img src="{{ iconUrl }}" height="64" width="64" />
+
+<p>{{ message }}</p>
