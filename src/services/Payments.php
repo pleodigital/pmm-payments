@@ -56,8 +56,8 @@ class Payments extends Component
         $payment -> setAttribute('lastName', $request -> getBodyParam('lastName'));
         $payment -> setAttribute('email', $request -> getBodyParam('email'));
         $payment -> setAttribute('amount', $request -> getBodyParam('amount'));
-        $payment -> setAttribute('isRecurring', $request -> getBodyParam('isRecurring'));
-        $payment -> setAttribute('provider', $request -> getBodyParam('provider'));
+        $payment -> setAttribute('isRecurring', $request -> getBodyParam('isRecurring') === 'true');
+        $payment -> setAttribute('provider', (int)$request -> getBodyParam('provider'));
 
         if( !$payment -> validate() ) {
             return [
