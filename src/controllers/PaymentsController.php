@@ -60,17 +60,16 @@ class PaymentsController extends Controller
      */
     public function actionIndex()
     {
-        // header('Access-Control-Allow-Origin: *');
-        // header('Access-Control-Allow-Headers: origin, x-requested-with, content-type');
-        // header('Access-Control-Allow-Methods: PUT, GET, POST, DELETE, OPTIONS');
 
-        // $this -> requirePostRequest();
-        // $this -> requireAcceptsJson();
+        try {
+            $request = Craft :: $app -> getRequest();
+            $response = Pmmpayments :: $plugin -> payments -> processRequestData( $request );
 
-        $requestBody = Craft :: $app -> request -> getRawBody();
-        $response = Pmmpayments :: $plugin -> payments -> processRequestData( $requestBody );
+            return $this -> asJson($response);
+        } catch (Exception $e) {
+            return 'Saving data went wrong.';
+        }
         
-        return $this->asJson($response);
     }
 
     // /**

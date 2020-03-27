@@ -45,21 +45,19 @@ class Payments extends Component
      *
      * @return mixed
      */
-    public function processRequestData($requestData)
+    public function processRequestData($request)
     {
         // Check our Plugin's settings for `someAttribute`
         // Pmmpayments::$plugin->getSettings()->someAttribute
 
-        $data = Json :: decode($requestData);
-
         $payment = new Payment();
-        $payment -> setAttribute('project', $data['project']);
-        $payment -> setAttribute('firstName', $data['firstName']);
-        $payment -> setAttribute('lastName', $data['lastName']);
-        $payment -> setAttribute('email', $data['email']);
-        $payment -> setAttribute('amount', $data['amount']);
-        $payment -> setAttribute('isRecurring', $data['isRecurring']);
-        $payment -> setAttribute('provider', $data['provider']);
+        $payment -> setAttribute('project', $request -> getBodyParam('project'));
+        $payment -> setAttribute('firstName', $request -> getBodyParam('firstName'));
+        $payment -> setAttribute('lastName', $request -> getBodyParam('lastName'));
+        $payment -> setAttribute('email', $request -> getBodyParam('email'));
+        $payment -> setAttribute('amount', $request -> getBodyParam('amount'));
+        $payment -> setAttribute('isRecurring', $request -> getBodyParam('isRecurring'));
+        $payment -> setAttribute('provider', $request -> getBodyParam('provider'));
 
         if( !$payment -> validate() ) {
             return [
