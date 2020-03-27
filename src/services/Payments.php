@@ -75,7 +75,6 @@ class Payments extends Component
 
     public function getPayUPayments()
     {
-        // exit('<pre>'.print_r(Payment :: find() -> where(['provider' => 1]) -> all(), true).'</pre>');
         return Payment :: find() -> where(['provider' => 1]) -> all();
     }
 

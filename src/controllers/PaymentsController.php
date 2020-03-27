@@ -47,7 +47,7 @@ class PaymentsController extends Controller
      *         The actions must be in 'kebab-case'
      * @access protected
      */
-    protected $allowAnonymous = ['index', 'do-something'];
+    protected $allowAnonymous = ['index'];
 
     // Public Methods
     // =========================================================================
@@ -60,8 +60,12 @@ class PaymentsController extends Controller
      */
     public function actionIndex()
     {
-        $this -> requirePostRequest();
-        $this -> requireAcceptsJson();
+        // header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Headers: origin, x-requested-with, content-type');
+        // header('Access-Control-Allow-Methods: PUT, GET, POST, DELETE, OPTIONS');
+
+        // $this -> requirePostRequest();
+        // $this -> requireAcceptsJson();
 
         $requestBody = Craft :: $app -> request -> getRawBody();
         $response = Pmmpayments :: $plugin -> payments -> processRequestData( $requestBody );
@@ -69,16 +73,16 @@ class PaymentsController extends Controller
         return $this->asJson($response);
     }
 
-    /**
-     * Handle a request going to our plugin's actionDoSomething URL,
-     * e.g.: actions/pmm-payments/payments/do-something
-     *
-     * @return mixed
-     */
-    public function actionDoSomething()
-    {
-        $result = 'Welcome to the PaymentsController actionDoSomething() method';
+    // /**
+    //  * Handle a request going to our plugin's actionDoSomething URL,
+    //  * e.g.: actions/pmm-payments/payments/do-something
+    //  *
+    //  * @return mixed
+    //  */
+    // public function actionDoSomething()
+    // {
+    //     $result = 'Welcome to the PaymentsController actionDoSomething() method';
 
-        return $result;
-    }
+    //     return $result;
+    // }
 }
