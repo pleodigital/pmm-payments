@@ -2,7 +2,7 @@
 
     <h1>Wpłaty</h1>
 
-    {% if list | length %}
+    {% if list and list.entries | length %}
         <div class="tablecontent">
             <table class="data fullwidth nowrap">
                 <thead>
@@ -17,7 +17,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for row in list %}
+                    {% for row in list.entries %}
                         <tr>
                             <td>{{ row.project }}</td>
                             <td>{{ row.firstName }}</td>
@@ -34,5 +34,9 @@
     {% else %}    
         <p>Brak elementów.</p>
     {% endif %}
+
+    <hr>
+    
+    <p style="text-align: right; margin: 30px 0; font-size: 18px; padding-right: 20px;"><b>Suma:</b> {{ list.total | number_format(2) }} PLN</p>
   
 </div>

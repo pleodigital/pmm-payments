@@ -73,12 +73,22 @@ class Payments extends Component
 
     public function getPayUPayments()
     {
-        return Payment :: find() -> where(['provider' => 1]) -> all();
+        $entries = Payment :: find() -> where(['provider' => 1]) -> all();
+        $total = array_reduce($entries, "self::sum");
+        return ['entries' => $entries, 'total' => $total];
     }
 
     public function getPayPalPayments()
     {
-        return Payment :: find() -> where(['provider' => 2]) -> all();
+        $entries = Payment :: find() -> where(['provider' => 2]) -> all();
+        $total = array_reduce($entries, "self::sum");
+        return ['entries' => $entries, 'total' => $total];
+    }
+
+    static function sum($carry, $item)
+    { 
+        $carry += $item -> amount;
+        return $carry;
     }
 
 }
