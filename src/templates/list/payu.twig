@@ -1,3 +1,7 @@
-{% extends "pmm-payments/_layouts/list" %}
+{% set baseUrl = 'pmm-payments/list/' %}
+{% set baseEntriesUrl = cpUrl(baseUrl ~ 'payu') %}
 
-{% set list = craft.payments.getPayUPayments() %}
+{% set page = craft.request.getQuery('page') ? craft.request.getQuery('page') : 1 %}
+{% set list = craft.payments.getPayUPayments(page) %}
+
+{% include "pmm-payments/list/_table" %}

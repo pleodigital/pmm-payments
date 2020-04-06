@@ -116,6 +116,7 @@ class Pmmpayments extends Plugin
             UrlManager::class,
             UrlManager::EVENT_REGISTER_CP_URL_RULES,
             function (RegisterUrlRulesEvent $event) { 
+                $event->rules['pmmpayments/list'] = 'pmm-payments/list';
                 $event->rules['pmmpayments/payu'] = 'pmm-payments/list/payu';
                 $event->rules['pmmpayments/paypal'] = 'pmm-payments/list/paypal';
             }
@@ -176,7 +177,7 @@ class Pmmpayments extends Plugin
 
         $parent['subnav']['list'] = [
             'label' => 'Lista płatności',
-            'url' => 'pmm-payments/list/payu'
+            'url' => 'pmm-payments/list'
         ];
 
         return $parent;

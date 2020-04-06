@@ -2,7 +2,7 @@
     "name": "pleodigital/pmm-payments",
     "description": "Payment processing plugin for the Polish Medical Mission",
     "type": "craft-plugin",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "keywords": [
         "craft",
         "cms",

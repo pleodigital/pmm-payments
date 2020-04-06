@@ -13,6 +13,7 @@ namespace pleodigital\pmmpayments\services;
 use pleodigital\pmmpayments\Pmmpayments;
 
 use Craft;
+use yii\data\ActiveDataProvider;
 use craft\base\Component;
 use craft\helpers\Json;
 use pleodigital\pmmpayments\records\Payment;
@@ -32,6 +33,7 @@ use pleodigital\pmmpayments\records\Payment;
  */
 class Payments extends Component
 {
+    const ENTRIES_ON_PAGE = 50;
     // Public Methods
     // =========================================================================
 
@@ -71,18 +73,57 @@ class Payments extends Component
         }
     }
 
-    public function getPayUPayments()
+    public function getPayUPayments($page)
     {
-        $entries = Payment :: find() -> where(['provider' => 1]) -> all();
-        $total = array_reduce($entries, "self::sum");
-        return ['entries' => $entries, 'total' => $total];
+        $provider = 1;
+        return $this -> getEntries($provider, $page);
     }
 
-    public function getPayPalPayments()
+    public function getPayPalPayments($page)
     {
-        $entries = Payment :: find() -> where(['provider' => 2]) -> all();
-        $total = array_reduce($entries, "self::sum");
-        return ['entries' => $entries, 'total' => $total];
+        $provider = 2;
+        return $this -> getEntries($provider, $page);
+    }
+
+    public function getSortOptions()
+    {
+        return [
+            ['value' => 'firstName', 'label' => 'Imię'],
+            ['value' => 'lastName', 'label' => 'Nazwisko'],
+            ['value' => 'email', 'label' => 'Email'],
+            ['value' => 'amount', 'label' => 'Kwota'],
+            ['value' => 'dateCreated', 'label' => 'Data płatności', 'selected' => true],
+        ];
+    }
+
+    private function getEntries($provider, $page)
+    {  
+        // -> limit( self :: ENTRIES_ON_PAGE )
+        // -> offset( self :: ENTRIES_ON_PAGE * ($page - 1) )
+
+        $provider = new ActiveDataProvider([
+            'query' => Payment :: find() -> where(['provider' => $provider]), 
+            'pagination' => [
+                'pageSize' => self :: ENTRIES_ON_PAGE,
+                'page' => $page - 1
+            ],
+        ]);
+        
+        $entries = $provider -> getModels();
+        $countFrom = self :: ENTRIES_ON_PAGE * ($page - 1) + 1;
+        $countTo = $countFrom + count($entries) - 1; 
+        $countAll = $provider -> getTotalCount();
+
+        return [
+            'entries' => $entries, 
+            'sum' => array_reduce($entries, "self::sum"),
+            'page' => $page,
+            'isPrevPage' => $countFrom > self :: ENTRIES_ON_PAGE,
+            'isNextPage' => $countTo < $countAll,
+            'countFrom' => $countFrom,
+            'countTo' => $countTo,
+            'countAll' => $countAll,
+        ];
     }
 
     static function sum($carry, $item)

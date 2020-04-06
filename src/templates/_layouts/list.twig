@@ -23,7 +23,7 @@
 {% set docsUrl = "???" %}
 
 {# The title of this CP section #}
-{% set title = "Płatności" %}
+{% set title = "Wpłaty" %}
 
 {# The URL to this plugin's base CP section #}
 {% set pluginCpUrl = url('pmm-payments') %}
@@ -31,32 +31,26 @@
 {# Get a URL to an image in our AssetBundle #}
 {% set iconUrl = view.getAssetManager().getPublishedUrl('@pleodigital/pmmpayments/assetbundles/paymentscpsection/dist', true) ~ '/img/Payments-icon.svg' %}
 
-{# Content that should appear in the page header#}
-{# {% block actionButton %}
-    <div class="buttons">
-        <a href="{{ pluginCpUrl }}" class="btn submit add icon">{{ "Click Me!"|t('pmm-payments') }}</a>
-    </div>
-{% endblock %} #}
-
 {% set sidebar %}
 
     {% set selectedSidebarItem = craft.app.request.getSegment(3) %}
     {% set baseUrl = 'pmm-payments/list/' %}
 
-    <nav class="last">
+    <nav class="last sidebar-pmmpayments">
         <ul>
             <li>
-                <a href="{{ cpUrl(baseUrl~'payu') }}" {% if selectedSidebarItem == 'payu' %}class="sel"{% endif %}>PayU</a>
+                <a href="{{ cpUrl(baseUrl~'payu') }}" class="load-entries sel">PayU</a>
             </li>
             <li>
-                <a href="{{ cpUrl(baseUrl~'paypal') }}" {% if selectedSidebarItem == 'paypal' %}class="sel"{% endif %}>PayPal</a>
+                <a href="{{ cpUrl(baseUrl~'paypal') }}" class="load-entries">PayPal</a>
             </li>          
         </ul>
     </nav>
 
 {% endset %}
 
-{# The content of the CP Section#}
-{% set content %}    
-    {% include "pmm-payments/list/_table" %}
-{% endset %}
+{% block content %}
+    <div class="main">
+        <div class="elements busy"></div>
+    </div>
+{% endblock %}

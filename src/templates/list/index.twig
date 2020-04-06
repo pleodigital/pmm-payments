@@ -1,0 +1,42 @@
+{% import "_includes/forms" as forms %}
+{% extends "pmm-payments/_layouts/list" %}
+
+{% block toolbar %}
+{% set sortOptions = craft.payments.getSortOptions() %}
+    <div id="toolbar" class="flex flex-nowrap">
+        {# <div>
+            <div class="btn menubtn statusmenubtn" tabindex="0" role="combobox" aria-owns="menu.Garnish685367686" aria-haspopup="true" aria-expanded="false">
+                <span class="status"></span>Wszystkie
+            </div>
+            
+            {{ forms.selectField({
+                name: 'defaultPageLength',
+                class: 'sortmenubtn',
+                options: sortOptions,
+            }) }}
+        </div>
+        <div class="flex-grow texticon search icon clearable">
+            <input type="text" class="text fullwidth" autocomplete="off" placeholder="Szukaj">
+            <div class="clear hidden" title="Wyczyść"></div>
+        </div> #}
+        <div>
+            <div class="btn menubtn sortmenubtn" data-icon="desc">Sortuj</div> 
+            <div class="menu">
+                <ul class="padded sort-attributes" role="listbox" id="menu.Garnish740013346" aria-hidden="true">
+                    {% for sortOption in sortOptions %}
+                        <li>
+                            <a class="{{ sortOption.selected is defined and sortOption.selected ? 'sel' }}" data-attr="pmmpayments.{{sortOption.value}}" role="option" tabindex="-1" id="null-option-{{ loop.index0 }}">    
+                                {{ sortOption.label }}
+                            </a>
+                        </li>
+                    {% endfor %}                  
+                </ul>
+                <hr>
+                <ul class="padded sort-directions" role="listbox" id="menu.Garnish740013346" aria-hidden="true">
+                    <li><a data-dir="asc" class="" role="option" tabindex="-1" id="null-option-2">Rosnąco</a></li>
+                    <li><a data-dir="desc" role="option" tabindex="-1" id="null-option-3" class="sel">Malejąco</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}

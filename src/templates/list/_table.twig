@@ -1,7 +1,5 @@
  <div class="tableview">
 
-    <h1>Wpłaty</h1>
-
     {% if list and list.entries | length %}
         <div class="tablecontent">
             <table class="data fullwidth nowrap">
@@ -35,8 +33,20 @@
         <p>Brak elementów.</p>
     {% endif %}
 
+    <div id="footer" class="flex">
+        <div id="count-spinner" class="spinner hidden"></div>
+        <div id="count-container" class="light flex-grow">
+            <div class="flex pagination">
+                <a class="page-link load-entries {{ list.isPrevPage ? '' : 'disabled' }}" data-icon="leftangle" title="Poprzednia strona" href="{{ baseEntriesUrl }}?page={{ list.page - 1 }}"></a>
+                <a class="page-link load-entries {{ list.isNextPage ? '' : 'disabled' }}" data-icon="rightangle" title="Następna strona" href="{{ baseEntriesUrl }}?page={{ list.page + 1 }}"></a>
+                <div class="page-info">{{ list.countFrom }}–{{ list.countTo }} z {{ list.countAll }} wpisów.</div>
+            </div>
+        </div>
+        <div id="export-btn" class="btn">Eksportuj…</div>
+    </div>
+
     <hr>
     
-    <p style="text-align: right; margin: 30px 0; font-size: 18px; padding-right: 20px;"><b>Suma:</b> {{ list.total | number_format(2) }} PLN</p>
+    <p style="text-align: right; margin: 30px 0; font-size: 18px; padding-right: 20px;"><b>Suma:</b> {{ list.sum | number_format(2) }} PLN</p>
   
 </div>

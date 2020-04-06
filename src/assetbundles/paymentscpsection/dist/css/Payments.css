@@ -9,3 +9,9 @@
  * @package   Pmmpayments
  * @since     1.0.0
  */
+
+
+#toolbar {
+    width: 100%;
+    min-width: initial;
+}
