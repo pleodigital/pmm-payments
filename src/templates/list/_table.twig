@@ -1,29 +1,21 @@
- <div class="tableview">
+ <div class="tableview"> 
 
     {% if list and list.entries | length %}
         <div class="tablecontent">
             <table class="data fullwidth nowrap">
                 <thead>
-                    <tr>
-                        <th>Projekt</th>
-                        <th>Imię</th>
-                        <th>Nazwisko</th>
-                        <th>Email</th>
-                        <th>Kwota</th>
-                        <th>Rodzaj</th>
-                        <th>Data płatności</th>
+                    <tr>                    
+                        {% for column in list.columns %}
+                            <th>{{ column.label }}</th>
+                        {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in list.entries %}
                         <tr>
-                            <td>{{ row.project }}</td>
-                            <td>{{ row.firstName }}</td>
-                            <td>{{ row.lastName }}</td>
-                            <td>{{ row.email }}</td>
-                            <td>{{ row.amount }}</td>
-                            <td>{{ row.isRecurring == '0' ? 'Płatność jednorazowa' : 'Płatność cykliczna' }}</td>
-                            <td>{{ row.dateCreated }}</td>
+                            {% for column in list.columns %}
+                                <td>{{ row[column.key] }}</td>
+                            {% endfor %}
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -42,11 +34,14 @@
                 <div class="page-info">{{ list.countFrom }}–{{ list.countTo }} z {{ list.countAll }} wpisów.</div>
             </div>
         </div>
-        <div id="export-btn" class="btn">Eksportuj…</div>
+        <a id="export-btn" class="btn" target="_blank" href="{{ exportCsvUrl }}">Eksportuj</a>
     </div>
 
     <hr>
     
-    <p style="text-align: right; margin: 30px 0; font-size: 18px; padding-right: 20px;"><b>Suma:</b> {{ list.sum | number_format(2) }} PLN</p>
+    <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat wyświetlanych na stronie:</b> {{ list.sum | number_format(2) }} PLN</p>
+    <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat w tym miesiącu:</b> {{ list.sumMonth | number_format(2) }} PLN</p>
+    <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat w tym roku:</b> {{ list.sumYear | number_format(2) }} PLN</p>
+    <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat:</b> {{ list.sumTotal | number_format(2) }} PLN</p>
   
 </div>

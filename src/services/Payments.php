@@ -14,6 +14,8 @@ use pleodigital\pmmpayments\Pmmpayments;
 
 use Craft;
 use yii\data\ActiveDataProvider;
+use League\Csv\Writer;
+use SplTempFileObject;
 use craft\base\Component;
 use craft\helpers\Json;
 use pleodigital\pmmpayments\records\Payment;
@@ -73,16 +75,16 @@ class Payments extends Component
         }
     }
 
-    public function getPayUPayments($page)
+    public function getPayUPayments($page, $sordBy, $sortOrder)
     {
         $provider = 1;
-        return $this -> getEntries($provider, $page);
+        return $this -> getEntries($provider, $page, $sordBy, $sortOrder);
     }
 
-    public function getPayPalPayments($page)
+    public function getPayPalPayments($page, $sordBy, $sortOrder)
     {
         $provider = 2;
-        return $this -> getEntries($provider, $page);
+        return $this -> getEntries($provider, $page, $sordBy, $sortOrder);
     }
 
     public function getSortOptions()
@@ -96,27 +98,73 @@ class Payments extends Component
         ];
     }
 
-    private function getEntries($provider, $page)
-    {  
-        // -> limit( self :: ENTRIES_ON_PAGE )
-        // -> offset( self :: ENTRIES_ON_PAGE * ($page - 1) )
+    public function exportCsv($providerName)
+    {
+        $provider = $this -> getProviderByName($providerName);
+        $entries = Payment :: find() -> where(['provider' => $provider]) -> asArray() -> all(); 
 
-        $provider = new ActiveDataProvider([
+        $writer = Writer :: createFromFileObject(new SplTempFileObject());                 
+        $writer -> insertOne(array_keys($entries[0]));
+        $writer -> insertAll($entries);
+        $writer -> output('payments-' . $providerName . '.csv');
+        exit(0);
+    }
+
+    private function getProviderByName($providerName)
+    {
+        $provider = 3;
+        switch($providerName) {
+            case 'payu':
+                $provider = 1;
+            break;
+            case 'paypal':
+                $provider = 2;
+            break;
+        }
+        return $provider;
+    }
+
+    private function getEntries($provider, $page, $sortBy = 'dateCreated', $sortOrder = 'DESC')
+    {  
+        $firstDayOfThisMonth = date('Y-m-01 00:00:00');
+        $lastDayOfThisMonth = date('Y-m-t 12:59:59');
+        $firstDayOfThisYear = date('Y-01-01 00:00:00');
+        $lastDayOfThisYear = date('Y-12-31 00:00:00');
+        $entriesMonth = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "dateCreated >= '$firstDayOfThisMonth'", "dateCreated <= '$lastDayOfThisMonth'"]) -> asArray() -> all(); 
+        $entriesYear = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "dateCreated >= '$firstDayOfThisYear'", "dateCreated <= '$lastDayOfThisYear'"]) -> asArray() -> all(); 
+        $entriesTotal = Payment :: find() -> where(['provider' => $provider]) -> asArray() -> all(); 
+
+        $activeDataProvider = new ActiveDataProvider([
             'query' => Payment :: find() -> where(['provider' => $provider]), 
             'pagination' => [
                 'pageSize' => self :: ENTRIES_ON_PAGE,
                 'page' => $page - 1
             ],
+            'sort' => [
+                'defaultOrder' => [
+                    $sortBy => $sortOrder === 'DESC' ? SORT_DESC : SORT_ASC,
+                    'dateCreated' => SORT_DESC,
+                ]
+            ]
         ]);
         
-        $entries = $provider -> getModels();
+        $entries = $activeDataProvider -> getModels();
         $countFrom = self :: ENTRIES_ON_PAGE * ($page - 1) + 1;
         $countTo = $countFrom + count($entries) - 1; 
-        $countAll = $provider -> getTotalCount();
+        $countAll = $activeDataProvider -> getTotalCount();
+
+        
+                            // {# <td>{{ row.isRecurring == '0' ? 'Płatność jednorazowa' : 'Płatność cykliczna' }}</td> #}
 
         return [
-            'entries' => $entries, 
+            'columns' => $this -> getColumns(),
+            'entries' => array_map("self::mapEntries", $entries), 
             'sum' => array_reduce($entries, "self::sum"),
+            'sumMonth' => array_reduce($entriesMonth, "self::sum"),
+            'sumYear' => array_reduce($entriesYear, "self::sum"),
+            'sumTotal' => array_reduce($entriesTotal, "self::sum"),
+            'sortBy' => $sortBy,
+            'sortOrder' => $sortOrder,
             'page' => $page,
             'isPrevPage' => $countFrom > self :: ENTRIES_ON_PAGE,
             'isNextPage' => $countTo < $countAll,
@@ -126,9 +174,28 @@ class Payments extends Component
         ];
     }
 
+    static function mapEntries($entry)
+    { 
+        $entry -> isRecurring = $entry -> isRecurring ? 'Płatność cykliczna' : 'Płatność jednorazowa' ; 
+        return $entry;
+    }
+
+    private function getColumns()
+    {
+        return [
+            ['label' => 'Projekt', 'key' => 'project'],
+            ['label' => 'Imię', 'key' => 'firstName'],
+            ['label' => 'Nazwisko', 'key' => 'lastName'],
+            ['label' => 'Email', 'key' => 'email'],
+            ['label' => 'Kwota', 'key' => 'amount'],
+            // ['label' => 'Rodzaj', 'key' => 'isRecurring'],
+            ['label' => 'Data płatności', 'key' => 'dateCreated']
+        ];
+    }
+
     static function sum($carry, $item)
     { 
-        $carry += $item -> amount;
+        $carry += $item['amount'];
         return $carry;
     }
 

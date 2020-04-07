@@ -72,6 +72,16 @@ class PaymentsController extends Controller
         
     }
 
+    public function actionExportCsv()
+    {
+        try {
+            $request = Craft :: $app -> getRequest(); 
+            $response = Pmmpayments :: $plugin -> payments -> exportCsv($request -> getQueryParam('provider'));
+        } catch (Exception $e) {
+            return 'Exporting went wrong.';
+        }
+    }
+
     // /**
     //  * Handle a request going to our plugin's actionDoSomething URL,
     //  * e.g.: actions/pmm-payments/payments/do-something

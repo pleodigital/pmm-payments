@@ -1,7 +1,13 @@
-{% set baseUrl = 'pmm-payments/list/' %}
-{% set baseEntriesUrl = cpUrl(baseUrl~'paypal') %}
+{% set pluginName = 'pmm-payments' %}
+{% set providerName = 'paypal' %}
+
+{% set baseUrl = pluginName ~ '/list/' %}
+{% set baseEntriesUrl = cpUrl(baseUrl ~ providerName) %}
+{% set exportCsvUrl = siteUrl ~ 'actions/' ~ pluginName ~ '/payments/export-csv?provider=' ~ providerName %}
 
 {% set page = craft.request.getQuery('page') ? craft.request.getQuery('page') : 1 %}
-{% set list = craft.payments.getPayPalPayments(page) %}
+{% set sortBy = craft.request.getQuery('sortBy') ? craft.request.getQuery('sortBy') : 'dateCreated' %}
+{% set sortOrder = craft.request.getQuery('sortOrder') ? craft.request.getQuery('sortOrder') : 'DESC' %}
+{% set list = craft.payments.getPayPalPayments(page, sortBy, sortOrder) %}
 
 {% include "pmm-payments/list/_table" %}

@@ -20,12 +20,12 @@
             <div class="clear hidden" title="Wyczyść"></div>
         </div> #}
         <div>
-            <div class="btn menubtn sortmenubtn" data-icon="desc">Sortuj</div> 
+            <div class="btn menubtn sortmenubtn" data-icon="desc">Data płatności</div> 
             <div class="menu">
-                <ul class="padded sort-attributes" role="listbox" id="menu.Garnish740013346" aria-hidden="true">
+                <ul class="padded sort-attributes" role="listbox" aria-hidden="true">
                     {% for sortOption in sortOptions %}
                         <li>
-                            <a class="{{ sortOption.selected is defined and sortOption.selected ? 'sel' }}" data-attr="pmmpayments.{{sortOption.value}}" role="option" tabindex="-1" id="null-option-{{ loop.index0 }}">    
+                            <a class="{{ sortOption.selected is defined and sortOption.selected ? 'sel' }}" data-sort-by="{{sortOption.value}}" role="option" tabindex="-1" id="null-option-{{ loop.index0 }}">    
                                 {{ sortOption.label }}
                             </a>
                         </li>
@@ -33,8 +33,8 @@
                 </ul>
                 <hr>
                 <ul class="padded sort-directions" role="listbox" id="menu.Garnish740013346" aria-hidden="true">
-                    <li><a data-dir="asc" class="" role="option" tabindex="-1" id="null-option-2">Rosnąco</a></li>
-                    <li><a data-dir="desc" role="option" tabindex="-1" id="null-option-3" class="sel">Malejąco</a></li>
+                    <li><a data-sort-order="ASC" class="" role="option" tabindex="-1" id="null-option-2">Rosnąco</a></li>
+                    <li><a data-sort-order="DESC" role="option" tabindex="-1" id="null-option-3" class="sel">Malejąco</a></li>
                 </ul>
             </div>
         </div>

@@ -11,6 +11,9 @@
  */
 
 var pmmPayments = {
+    sortBy: null,
+    sortOrder: null,
+
     _init: function() {
         this.loadEntries();
         this.registerEvents();
@@ -19,6 +22,8 @@ var pmmPayments = {
     registerEvents: function() {
         $('.sidebar-pmmpayments a.load-entries').click(this.onChangePaymentsList);
         $('.content-pane').on('click', 'a.load-entries', this.onRefreshEntries);
+        $('body').on('click', 'ul.sort-attributes li a', this.onSetSortBy);
+        $('body').on('click', 'ul.sort-directions li a', this.onSetSortOrder);
     },
 
     onChangePaymentsList: function(event) {
@@ -36,12 +41,35 @@ var pmmPayments = {
         pmmPayments.loadEntries(this);
     },
 
+    onSetSortBy: function() {      
+        pmmPayments.sortBy = $(this).data('sort-by');
+        $('ul.sort-attributes li a.sel').not(this).removeClass('sel');
+        $(this).addClass('sel');
+        $('.sortmenubtn').text($(this).text());
+        pmmPayments.loadEntries();
+    },
+
+    onSetSortOrder: function() {
+        pmmPayments.sortOrder = $(this).data('sort-order');
+        $('ul.sort-directions li a.sel').not(this).removeClass('sel');
+        $(this).addClass('sel');
+        $('.sortmenubtn').attr('data-icon', pmmPayments.sortOrder.toLowerCase());
+        pmmPayments.loadEntries();
+    },
+
     loadEntries: function(element) {
         if(!element) {
             element = $('.sidebar-pmmpayments a.sel');
         }
         $('.content-pane .main .elements').addClass('busy');
-        $.get($(element).attr('href'), function(html) {
+        var url = $(element).attr('href') + '?';
+        if(this.sortBy) {
+            url += 'sortBy=' + this.sortBy + '&'; 
+        } 
+        if(this.sortOrder) {
+            url += 'sortOrder=' + this.sortOrder + '&'; 
+        } 
+        $.get(url, function(html) {
             $('.content-pane .main .elements').html(html);
             $('.content-pane .main .elements').removeClass('busy');
         })      
