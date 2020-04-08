@@ -29,8 +29,8 @@
         <div id="count-spinner" class="spinner hidden"></div>
         <div id="count-container" class="light flex-grow">
             <div class="flex pagination">
-                <a class="page-link load-entries {{ list.isPrevPage ? '' : 'disabled' }}" data-icon="leftangle" title="Poprzednia strona" href="{{ baseEntriesUrl }}?page={{ list.page - 1 }}"></a>
-                <a class="page-link load-entries {{ list.isNextPage ? '' : 'disabled' }}" data-icon="rightangle" title="Następna strona" href="{{ baseEntriesUrl }}?page={{ list.page + 1 }}"></a>
+                <a class="page-link load-entries {{ list.isPrevPage ? '' : 'disabled' }}" data-icon="leftangle" title="Poprzednia strona" href="{{ baseEntriesUrl }}?page={{ list.page - 1 }}&sortBy={{ list.sortBy }}&sortOrder={{ list.sortOrder }}"></a>
+                <a class="page-link load-entries {{ list.isNextPage ? '' : 'disabled' }}" data-icon="rightangle" title="Następna strona" href="{{ baseEntriesUrl }}?page={{ list.page + 1 }}&sortBy={{ list.sortBy }}&sortOrder={{ list.sortOrder }}"></a>
                 <div class="page-info">{{ list.countFrom }}–{{ list.countTo }} z {{ list.countAll }} wpisów.</div>
             </div>
         </div>
