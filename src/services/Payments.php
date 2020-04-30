@@ -13,12 +13,14 @@ namespace pleodigital\pmmpayments\services;
 use pleodigital\pmmpayments\Pmmpayments;
 
 use Craft;
+use Yii;
 use yii\data\ActiveDataProvider;
 use League\Csv\Writer;
 use SplTempFileObject;
 use craft\base\Component;
 use craft\helpers\Json;
 use pleodigital\pmmpayments\records\Payment;
+use yii\data\SqlDataProvider;
 
 /**
  * Payments Service
@@ -56,6 +58,7 @@ class Payments extends Component
 
         $payment = new Payment();
         $payment -> setAttribute('project', $request -> getBodyParam('project'));
+        $payment -> setAttribute('title', $request -> getBodyParam('title'));
         $payment -> setAttribute('firstName', $request -> getBodyParam('firstName'));
         $payment -> setAttribute('lastName', $request -> getBodyParam('lastName'));
         $payment -> setAttribute('email', $request -> getBodyParam('email'));
@@ -75,16 +78,16 @@ class Payments extends Component
         }
     }
 
-    public function getPayUPayments($page, $sordBy, $sortOrder)
+    public function getPayUPayments($page, $sordBy, $sortOrder, $projectFilter, $yearFilter, $monthFilter)
     {
         $provider = 1;
-        return $this -> getEntries($provider, $page, $sordBy, $sortOrder);
+        return $this -> getEntries($provider, $page, $sordBy, $sortOrder, $projectFilter, $yearFilter, $monthFilter);
     }
 
-    public function getPayPalPayments($page, $sordBy, $sortOrder)
+    public function getPayPalPayments($page, $sordBy, $sortOrder, $projectFilter, $yearFilter, $monthFilter)
     {
         $provider = 2;
-        return $this -> getEntries($provider, $page, $sordBy, $sortOrder);
+        return $this -> getEntries($provider, $page, $sordBy, $sortOrder, $projectFilter, $yearFilter, $monthFilter);
     }
 
     public function getSortOptions()
@@ -95,6 +98,35 @@ class Payments extends Component
             ['value' => 'email', 'label' => 'Email'],
             ['value' => 'amount', 'label' => 'Kwota'],
             ['value' => 'dateCreated', 'label' => 'Data płatności', 'selected' => true],
+        ];
+    }
+
+    public function getProjectFilterOptions()
+    {
+        $activeDataProvider = new SqlDataProvider([
+            'sql' => "SELECT DISTINCT(project) FROM pmmpayments_payment",
+        ]);
+
+        $projects= $activeDataProvider->getModels();
+
+        return $projects;
+    }
+
+    public function getYearFilterOptions()
+    {
+        $activeDataProvider = new SqlDataProvider([
+            'sql' => "SELECT DISTINCT(YEAR(dateCreated)) AS year FROM pmmpayments_payment",
+        ]);
+
+        $years= $activeDataProvider->getModels();
+
+        return $years;
+    }
+
+    public function getMonthFilterOptions()
+    {
+        return [
+            "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"
         ];
     }
 
@@ -124,7 +156,7 @@ class Payments extends Component
         return $provider;
     }
 
-    private function getEntries($provider, $page, $sortBy = 'dateCreated', $sortOrder = 'DESC')
+    private function getEntries($provider, $page, $sortBy = 'dateCreated', $sortOrder = 'DESC', $projectFilter = null, $yearFilter = null, $monthFilter = null)
     {  
         $firstDayOfThisMonth = date('Y-m-01 00:00:00');
         $lastDayOfThisMonth = date('Y-m-t 12:59:59');
@@ -133,9 +165,22 @@ class Payments extends Component
         $entriesMonth = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "dateCreated >= '$firstDayOfThisMonth'", "dateCreated <= '$lastDayOfThisMonth'"]) -> asArray() -> all(); 
         $entriesYear = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "dateCreated >= '$firstDayOfThisYear'", "dateCreated <= '$lastDayOfThisYear'"]) -> asArray() -> all(); 
         $entriesTotal = Payment :: find() -> where(['provider' => $provider]) -> asArray() -> all(); 
+        $query = Payment :: find() -> where(['provider' => $provider]);
+
+
+        if ($projectFilter) {
+            $query-> where(['project' => $projectFilter]);
+        }
+        if ($yearFilter) {
+            $query-> where(['YEAR(dateCreated)' => $yearFilter]);
+        }
+        if ($monthFilter) {
+            $query-> where(['MONTH(dateCreated)' => $monthFilter]);
+        }
+
 
         $activeDataProvider = new ActiveDataProvider([
-            'query' => Payment :: find() -> where(['provider' => $provider]), 
+            'query' => $query,
             'pagination' => [
                 'pageSize' => self :: ENTRIES_ON_PAGE,
                 'page' => $page - 1
@@ -147,7 +192,23 @@ class Payments extends Component
                 ]
             ]
         ]);
-        
+//        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM pmmpayments_payment WHERE provider=:provider', [':provider' => $provider])->queryScalar();
+//        $activeDataProvider = new SqlDataProvider([
+//            'sql' => "SELECT * FROM pmmpayments_payment WHERE provider=:provider",
+//            'params' => [':provider' => $provider],
+//            'totalCount' => $count,
+//            'pagination' => [
+//                'pageSize' => self :: ENTRIES_ON_PAGE,
+//                'page' => $page - 1
+//            ],
+//            'sort' => [
+//                'defaultOrder' => [
+//                    $sortBy => $sortOrder === 'DESC' ? SORT_DESC : SORT_ASC,
+//                    'dateCreated' => SORT_DESC,
+//                ]
+//            ]
+//        ]);
+
         $entries = $activeDataProvider -> getModels();
         $countFrom = self :: ENTRIES_ON_PAGE * ($page - 1) + 1;
         $countTo = $countFrom + count($entries) - 1; 
@@ -184,6 +245,7 @@ class Payments extends Component
     {
         return [
             ['label' => 'Projekt', 'key' => 'project'],
+            ['label' => 'Tytuł', 'key' => 'title'],
             ['label' => 'Imię', 'key' => 'firstName'],
             ['label' => 'Nazwisko', 'key' => 'lastName'],
             ['label' => 'Email', 'key' => 'email'],
