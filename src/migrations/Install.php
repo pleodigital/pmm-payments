@@ -101,15 +101,17 @@ class Install extends Migration
         $tableSchema = Craft::$app->db->schema->getTableSchema('{{%pmmpayments_payment}}');
         if ($tableSchema === null) {
             $tablesCreated = true;
+            $timeZone = Craft::$app -> getTimeZone();
             $this->createTable(
                 '{{%pmmpayments_payment}}',
                 [
                     'id' => $this -> primaryKey(),
-                    'dateCreated' => $this -> dateTime() -> notNull(),
-                    'dateUpdated' => $this -> dateTime() -> notNull(),
+                    'dateCreated' => $this -> dateTime() -> setTimeZone(new DateTimeZone($timeZone)) -> notNull(),
+                    'dateUpdated' => $this -> dateTime() -> setTimeZone(new DateTimeZone($timeZone))-> notNull(),
                     'uid' => $this -> uid(),
                 // Custom columns in the table 
                     'project' => $this -> string(500) -> notNull() -> defaultValue(''),
+                    'title' => $this -> string(500) -> notNull() -> defaultValue(''),
                     'firstName' => $this -> string(255) -> notNull() -> defaultValue(''),
                     'lastName' => $this -> string(255) -> notNull() -> defaultValue(''),
                     'email' => $this -> string(255) -> notNull() -> defaultValue(''),

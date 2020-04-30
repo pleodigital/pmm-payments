@@ -60,6 +60,10 @@ class Payment extends ActiveRecord
                 'type' => AttributeType::String,
                 'required' => true
             ],
+            'title' => [
+                'type' => AttributeType::String,
+                'required' => true
+            ],
             'firstName' => [
                 'type' => AttributeType::String,
                 'required' => true

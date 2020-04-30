@@ -3,6 +3,9 @@
 
 {% block toolbar %}
 {% set sortOptions = craft.payments.getSortOptions() %}
+{% set projectFilters = craft.payments.getProjectFilterOptions() %}
+{% set yearFilters = craft.payments.getYearFilterOptions() %}
+{% set monthFilters = craft.payments.getMonthFilterOptions() %}
     <div id="toolbar" class="flex flex-nowrap">
         {# <div>
             <div class="btn menubtn statusmenubtn" tabindex="0" role="combobox" aria-owns="menu.Garnish685367686" aria-haspopup="true" aria-expanded="false">
@@ -35,6 +38,48 @@
                 <ul class="padded sort-directions" role="listbox" id="menu.Garnish740013346" aria-hidden="true">
                     <li><a data-sort-order="ASC" class="" role="option" tabindex="-1" id="null-option-2">Rosnąco</a></li>
                     <li><a data-sort-order="DESC" role="option" tabindex="-1" id="null-option-3" class="sel">Malejąco</a></li>
+                </ul>
+            </div>
+        </div>
+        <div>
+            <div class="btn menubtn">Filtruj po projektach</div>
+            <div class="menu">
+                <ul class="padded filters" role="listbox" aria-hidden="true">
+                    {% for projectFilter in projectFilters %}
+                        <li>
+                            <a role="option" data-project-filter="{{ projectFilter.project }}" tabindex="-1" id="null-option-{{ loop.index0 }}">
+                                {{ projectFilter.project }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div>
+            <div class="btn menubtn">Filtruj po Latach</div>
+            <div class="menu">
+                <ul class="padded filters" role="listbox" aria-hidden="true">
+                    {% for yearFilter in yearFilters %}
+                        <li>
+                            <a role="option" data-year-filter="{{ yearFilter.year }}" tabindex="-1" id="null-option-{{ loop.index0 }}">
+                                {{ yearFilter.year }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div>
+            <div class="btn menubtn">Filtruj po miesiącach</div>
+            <div class="menu">
+                <ul class="padded filters" role="listbox" aria-hidden="true">
+                    {% for monthFilter in monthFilters %}
+                        <li>
+                            <a role="option" data-month-filter="{{ loop.index }}" tabindex="-1" id="null-option-{{ loop.index0 }}">
+                                {{ monthFilter }}
+                            </a>
+                        </li>
+                    {% endfor %}
                 </ul>
             </div>
         </div>
