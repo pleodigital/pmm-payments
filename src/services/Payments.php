@@ -165,18 +165,23 @@ class Payments extends Component
         $entriesMonth = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "dateCreated >= '$firstDayOfThisMonth'", "dateCreated <= '$lastDayOfThisMonth'"]) -> asArray() -> all(); 
         $entriesYear = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "dateCreated >= '$firstDayOfThisYear'", "dateCreated <= '$lastDayOfThisYear'"]) -> asArray() -> all(); 
         $entriesTotal = Payment :: find() -> where(['provider' => $provider]) -> asArray() -> all(); 
-        $query = Payment :: find() -> where(['provider' => $provider]);
+//        $query = Payment :: find() -> where(['provider' => $provider]);
+        $filters = ['and'];
 
 
         if ($projectFilter) {
-            $query-> where(['project' => $projectFilter]);
+            array_push($filters, "project = '$projectFilter'");
         }
         if ($yearFilter) {
-            $query-> where(['YEAR(dateCreated)' => $yearFilter]);
+            array_push($filters, "YEAR(dateCreated) = '$yearFilter'");
+//            $query-> where(['YEAR(dateCreated)' => $yearFilter]);
         }
         if ($monthFilter) {
-            $query-> where(['MONTH(dateCreated)' => $monthFilter]);
+            array_push($filters, "MONTH(dateCreated) = '$monthFilter'");
+//            $query-> where(['MONTH(dateCreated)' => $monthFilter]);
         }
+
+        $query = Payment::find()->where(['provider' => $provider])->andWhere($filters);
 
 
         $activeDataProvider = new ActiveDataProvider([
@@ -216,7 +221,6 @@ class Payments extends Component
 
         
                             // {# <td>{{ row.isRecurring == '0' ? 'Płatność jednorazowa' : 'Płatność cykliczna' }}</td> #}
-
         return [
             'columns' => $this -> getColumns(),
             'entries' => array_map("self::mapEntries", $entries), 

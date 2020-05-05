@@ -28,7 +28,10 @@ var pmmPayments = {
         $('.content-pane').on('click', 'a.load-entries', this.onRefreshEntries);
         $('body').on('click', 'ul.sort-attributes li a', this.onSetSortBy);
         $('body').on('click', 'ul.sort-directions li a', this.onSetSortOrder);
-        $('body').on('click', 'ul.filters li a', this.onSetFilter);
+        $('body').on('click', 'ul.project-filters li a', (e) => this.onSetFilter(e, "p"));
+        $('body').on('click', 'ul.year-filters li a', (e) => this.onSetFilter(e, "y"));
+        $('body').on('click', 'ul.month-filters li a', (e) => this.onSetFilter(e, "m"));
+        $('body').on('click', 'div.clear-filters', this.onClearFilters);
         // $('body').on('click', 'ul.sort-attributes li a', this.onSetSortBy);
     },
 
@@ -36,6 +39,7 @@ var pmmPayments = {
         event.preventDefault();
         $('.sidebar-pmmpayments a').not(this).removeClass('sel');
         $(this).addClass('sel');
+        pmmPayments.clearFilters();
         pmmPayments.loadEntries(this);         
     },
 
@@ -47,14 +51,41 @@ var pmmPayments = {
         pmmPayments.loadEntries(this);
     },
 
-    onSetFilter: function(event) {
+    onSetFilter: function(event, type) {
         event.preventDefault();
-        pmmPayments.projectFilter = $(this).data('project-filter');
-        pmmPayments.yearFilter = $(this).data('year-filter');
-        pmmPayments.monthFilter = $(this).data('month-filter');
-        $('ul.filters li a.sel').not(this).removeClass('sel');
-        $(this).addClass('sel');
+        if (type === "y") {
+            pmmPayments.yearFilter = $(event.target).data('year-filter');
+            $('.year-filter-name').text($(event.target).text())
+            $('ul.year-filters li a.sel').not(this).removeClass('sel');
+        }
+        if (type === "p") {
+            pmmPayments.projectFilter = $(event.target).data('project-filter');
+            $('.project-filter-name').text($(event.target).text())
+            $('ul.project-filters li a.sel').not(this).removeClass('sel');
+        }
+        if (type === "m") {
+            pmmPayments.monthFilter = $(event.target).data('month-filter');
+            $('.month-filter-name').text($(event.target).text())
+            $('ul.month-filters li a.sel').not(this).removeClass('sel');
+        }
+        $(event.target).addClass('sel');
         pmmPayments.loadEntries();
+    },
+
+    onClearFilters: function(event) {
+        event.preventDefault();
+        pmmPayments.clearFilters();
+        pmmPayments.loadEntries();
+    },
+
+    clearFilters: function() {
+        pmmPayments.projectFilter = null;
+        pmmPayments.yearFilter = null;
+        pmmPayments.monthFilter = null;
+        $('.month-filter-name').text("Filtruj po miesiącach");
+        $('.year-filter-name').text("Filtruj po latach");
+        $('.project-filter-name').text("Filtruj po projektach");
+        $('ul.filters li a.sel').not(this).removeClass('sel');
     },
 
     onSetSortBy: function() {      
@@ -79,6 +110,7 @@ var pmmPayments = {
         }
         $('.content-pane .main .elements').addClass('busy');
         var url = $(element).attr('href') + '?';
+        console.log(this.projectFilter, this.yearFilter, this.monthFilter);
         if(this.sortBy) {
             url += 'sortBy=' + this.sortBy + '&'; 
         } 

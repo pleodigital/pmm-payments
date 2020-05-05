@@ -42,9 +42,9 @@
             </div>
         </div>
         <div>
-            <div class="btn menubtn">Filtruj po projektach</div>
+            <div class="btn menubtn project-filter-name">Filtruj po projektach</div>
             <div class="menu">
-                <ul class="padded filters" role="listbox" aria-hidden="true">
+                <ul class="padded filters project-filters" role="listbox" aria-hidden="true">
                     {% for projectFilter in projectFilters %}
                         <li>
                             <a role="option" data-project-filter="{{ projectFilter.project }}" tabindex="-1" id="null-option-{{ loop.index0 }}">
@@ -56,9 +56,9 @@
             </div>
         </div>
         <div>
-            <div class="btn menubtn">Filtruj po Latach</div>
+            <div class="btn menubtn year-filter-name">Filtruj po latach</div>
             <div class="menu">
-                <ul class="padded filters" role="listbox" aria-hidden="true">
+                <ul class="padded filters year-filters" role="listbox" aria-hidden="true">
                     {% for yearFilter in yearFilters %}
                         <li>
                             <a role="option" data-year-filter="{{ yearFilter.year }}" tabindex="-1" id="null-option-{{ loop.index0 }}">
@@ -70,9 +70,9 @@
             </div>
         </div>
         <div>
-            <div class="btn menubtn">Filtruj po miesiącach</div>
+            <div class="btn menubtn month-filter-name">Filtruj po miesiącach</div>
             <div class="menu">
-                <ul class="padded filters" role="listbox" aria-hidden="true">
+                <ul class="padded filters month-filters" role="listbox" aria-hidden="true">
                     {% for monthFilter in monthFilters %}
                         <li>
                             <a role="option" data-month-filter="{{ loop.index }}" tabindex="-1" id="null-option-{{ loop.index0 }}">
@@ -83,5 +83,6 @@
                 </ul>
             </div>
         </div>
+        <div class="btn clear-filters">Usuń filtry</div>
     </div>
 {% endblock %}
