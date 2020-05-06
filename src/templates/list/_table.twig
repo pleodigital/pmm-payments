@@ -1,53 +1,4 @@
-{#{% requirePermission "sproutForms-editEntries" %}#}
-{#{% extends "sprout-forms/_layouts/base" %}#}
-{#{% import 'sprout-base/_includes/sproutcp' as sprout %}#}
-{#{% import "_includes/forms" as forms %}#}
-
-{#{% set canCreateForm = craft.app.getModule('sprout-forms').app.forms.canCreateForm() %}#}
-
-{#{% block content %}#}
-
-{#    <input type="hidden" name="action" value="sprout-forms/entries/save-entry">#}
-{#    <input type="hidden" name="handle" value="{{ form.handle }}">#}
-{#    <input type="hidden" name="entryId" value="{{ entryId }}">#}
-
-{#    {% if namespace is not defined %}{% set namespace = 'fields' %}{% endif %}#}
-
-{#    <div id="fields">#}
-
-{#        {% for tab in fieldLayoutTabs %}#}
-
-{#            {% set fields = tab.getFields() %}#}
-
-{#            <div id="tab{{ loop.index }}"#}
-{#                 {% if not loop.first %}class="hidden"{% endif %}>#}
-
-{#                {% namespace namespace %}#}
-
-{#                    {% for field in fields %}#}
-{#                        {% include "_includes/field" with {#}
-{#                            field:    field,#}
-{#                            required: field.required,#}
-{#                            element:  entry,#}
-{#                            static: null#}
-{#                        } only %}#}
-{#                    {% endfor %}#}
-
-{#                {% endnamespace %}#}
-
-{#            </div>#}
-
-{#        {% endfor %}#}
-
-{#    </div>#}
-
-{#    {% hook 'cp.sproutForms.entries.edit.content' %}#}
-
-{#{% endblock %}#}
-
-{#{% set form = craft. %}#}
-
-<div class="tableview">
+ <div class="tableview">
     {% if list and list.entries | length %}
         <div class="tablecontent">
             <table class="data fullwidth nowrap">
@@ -60,12 +11,12 @@
                 </thead>
                 <tbody>
                     {% for row in list.entries %}
-                        <tr>
+                        <tr style="white-space: normal;">
                             {% for column in list.columns %}
                                 {% if column.key == 'dateCreated' %}
-                                <td>{{ row[column.key] | date_modify("+2 hours") | date("d/m/Y H:i:s")  }}</td>
+                                <td style="max-width: 200px;">{{ row[column.key] | date_modify("+2 hours") | date("d/m/Y H:i:s")  }}</td>
                                 {% else %}
-                                <td>{{ row[column.key] }}</td>
+                                <td style="max-width: 200px;">{{ row[column.key] }}</td>
                                 {% endif %}
                             {% endfor %}
                         </tr>
@@ -91,9 +42,10 @@
 
     <hr>
     
+    <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat z wybranymi filtrami:</b> {{ list.sumFilter | number_format(2) }} PLN</p>
     <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat wyświetlanych na stronie:</b> {{ list.sum | number_format(2) }} PLN</p>
     <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat w tym miesiącu:</b> {{ list.sumMonth | number_format(2) }} PLN</p>
     <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat w tym roku:</b> {{ list.sumYear | number_format(2) }} PLN</p>
     <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat:</b> {{ list.sumTotal | number_format(2) }} PLN</p>
-  
+
 </div>

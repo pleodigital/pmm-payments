@@ -119,6 +119,7 @@ class Pmmpayments extends Plugin
                 $event->rules['pmmpayments/list'] = 'pmm-payments/list';
                 $event->rules['pmmpayments/payu'] = 'pmm-payments/list/payu';
                 $event->rules['pmmpayments/paypal'] = 'pmm-payments/list/paypal';
+                $event->rules['pmmpayments/chart'] = 'pmm-payments/list/chart';
             }
         );
 

@@ -26,6 +26,7 @@ var pmmPayments = {
     registerEvents: function() {
         $('.sidebar-pmmpayments a.load-entries').click(this.onChangePaymentsList);
         $('.content-pane').on('click', 'a.load-entries', this.onRefreshEntries);
+        $('.content-pane').on('click', 'a.stats', this.onStats);
         $('body').on('click', 'ul.sort-attributes li a', this.onSetSortBy);
         $('body').on('click', 'ul.sort-directions li a', this.onSetSortOrder);
         $('body').on('click', 'ul.project-filters li a', (e) => this.onSetFilter(e, "p"));
@@ -33,6 +34,13 @@ var pmmPayments = {
         $('body').on('click', 'ul.month-filters li a', (e) => this.onSetFilter(e, "m"));
         $('body').on('click', 'div.clear-filters', this.onClearFilters);
         // $('body').on('click', 'ul.sort-attributes li a', this.onSetSortBy);
+    },
+
+    onStats: function(event) {
+        event.preventDefault();
+        console.log("onStats");
+        // pmmChart._init();
+        pmmPayments.onRefreshEntries(event);
     },
 
     onChangePaymentsList: function(event) {

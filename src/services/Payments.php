@@ -228,6 +228,7 @@ class Payments extends Component
             'sumMonth' => array_reduce($entriesMonth, "self::sum"),
             'sumYear' => array_reduce($entriesYear, "self::sum"),
             'sumTotal' => array_reduce($entriesTotal, "self::sum"),
+            'sumFilter' => array_reduce($query->asArray()->all(), "self::sum"),
             'sortBy' => $sortBy,
             'sortOrder' => $sortOrder,
             'page' => $page,

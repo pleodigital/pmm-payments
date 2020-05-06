@@ -18,6 +18,7 @@
 
 {% do view.registerAssetBundle("pleodigital\\pmmpayments\\assetbundles\\pmmpayments\\PmmpaymentsAsset") %}
 {% do view.registerAssetBundle("pleodigital\\pmmpayments\\assetbundles\\paymentscpsection\\PaymentsCPSectionAsset") %}
+{% do view.registerAssetBundle("pleodigital\\pmmpayments\\assetbundles\\paymentschart\\PaymentsChartAsset") %}
 
 {# Link for the ? icon at the bottom of the page #}
 {% set docsUrl = "???" %}
@@ -43,7 +44,10 @@
             </li>
             <li>
                 <a href="{{ cpUrl(baseUrl~'paypal') }}" class="load-entries">PayPal</a>
-            </li>          
+            </li>
+{#            <li>#}
+{#                <a href="{{ cpUrl(baseUrl~'chart') }}" class="stats sel">Statystyki</a>#}
+{#            </li>#}
         </ul>
     </nav>
 
