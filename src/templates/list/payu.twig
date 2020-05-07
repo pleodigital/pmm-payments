@@ -13,13 +13,5 @@
 {% set monthFilter = craft.app.request.getQueryParam('monthFilter') ? craft.app.request.getQueryParam('monthFilter') : null %}
 {% set list = craft.payments.getPayUPayments(page, sortBy, sortOrder, projectFilter, yearFilter, monthFilter) %}
 
-{% macro jsVar(variable, jsVariableName) %}
-    var {{jsVariableName}} = {{variable|json_encode|raw}};
-{% endmacro %}
-
-
 {% include "pmm-payments/list/_table" %}
 
-<script>
-    {{_self.jsVar(list, 'list')}}
-</script>

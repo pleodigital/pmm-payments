@@ -78,6 +78,26 @@ class Payments extends Component
         }
     }
 
+    public function getAllMonthsTotal($projectFilter = "%", $yearFilter = "%", $monthFilter = "%") {
+        $sql = "SELECT YEAR(dateCreated) as year,
+            MONTH(dateCreated) as month,
+            SUM(amount) AS total
+            FROM pmmpayments_payment
+            WHERE (project LIKE '%$projectFilter%') AND (MONTH(dateCreated) LIKE '%$monthFilter%') AND (YEAR(dateCreated) LIKE '%$yearFilter%')
+            GROUP BY YEAR(dateCreated), MONTH(dateCreated)
+        ";
+
+        $activeDataProvider = new SqlDataProvider([
+            'sql' => $sql,
+            'pagination' => [
+                'pageSize' => false
+            ],
+        ]);
+
+        $totals = $activeDataProvider->getModels();
+        return $totals;
+    }
+
     public function getPayUPayments($page, $sordBy, $sortOrder, $projectFilter, $yearFilter, $monthFilter)
     {
         $provider = 1;
@@ -157,14 +177,14 @@ class Payments extends Component
     }
 
     private function getEntries($provider, $page, $sortBy = 'dateCreated', $sortOrder = 'DESC', $projectFilter = null, $yearFilter = null, $monthFilter = null)
-    {  
+    {
         $firstDayOfThisMonth = date('Y-m-01 00:00:00');
         $lastDayOfThisMonth = date('Y-m-t 12:59:59');
         $firstDayOfThisYear = date('Y-01-01 00:00:00');
         $lastDayOfThisYear = date('Y-12-31 00:00:00');
-        $entriesMonth = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "dateCreated >= '$firstDayOfThisMonth'", "dateCreated <= '$lastDayOfThisMonth'"]) -> asArray() -> all(); 
-        $entriesYear = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "dateCreated >= '$firstDayOfThisYear'", "dateCreated <= '$lastDayOfThisYear'"]) -> asArray() -> all(); 
-        $entriesTotal = Payment :: find() -> where(['provider' => $provider]) -> asArray() -> all(); 
+        $entriesMonth = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "dateCreated >= '$firstDayOfThisMonth'", "dateCreated <= '$lastDayOfThisMonth'"]) -> asArray() -> all();
+        $entriesYear = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "dateCreated >= '$firstDayOfThisYear'", "dateCreated <= '$lastDayOfThisYear'"]) -> asArray() -> all();
+        $entriesTotal = Payment :: find() -> where(['provider' => $provider]) -> asArray() -> all();
 //        $query = Payment :: find() -> where(['provider' => $provider]);
         $filters = ['and'];
 
@@ -174,11 +194,9 @@ class Payments extends Component
         }
         if ($yearFilter) {
             array_push($filters, "YEAR(dateCreated) = '$yearFilter'");
-//            $query-> where(['YEAR(dateCreated)' => $yearFilter]);
         }
         if ($monthFilter) {
             array_push($filters, "MONTH(dateCreated) = '$monthFilter'");
-//            $query-> where(['MONTH(dateCreated)' => $monthFilter]);
         }
 
         $query = Payment::find()->where(['provider' => $provider])->andWhere($filters);
@@ -216,14 +234,14 @@ class Payments extends Component
 
         $entries = $activeDataProvider -> getModels();
         $countFrom = self :: ENTRIES_ON_PAGE * ($page - 1) + 1;
-        $countTo = $countFrom + count($entries) - 1; 
+        $countTo = $countFrom + count($entries) - 1;
         $countAll = $activeDataProvider -> getTotalCount();
 
-        
+
                             // {# <td>{{ row.isRecurring == '0' ? 'Płatność jednorazowa' : 'Płatność cykliczna' }}</td> #}
         return [
             'columns' => $this -> getColumns(),
-            'entries' => array_map("self::mapEntries", $entries), 
+            'entries' => array_map("self::mapEntries", $entries),
             'sum' => array_reduce($entries, "self::sum"),
             'sumMonth' => array_reduce($entriesMonth, "self::sum"),
             'sumYear' => array_reduce($entriesYear, "self::sum"),

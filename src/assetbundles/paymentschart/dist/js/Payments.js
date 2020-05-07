@@ -16,26 +16,23 @@ var pmmChart = {
     },
 
     buildChart: function () {
+        // console.log(totals);
+        // totals = JSON.parse(totals);
+        // console.log(totals);
         var ctx = $( "#canvas-stats" );
-        console.log(ctx);
+        var data = [];
+        totals.forEach(function (monthData) {
+            data.push({
+                t: new Date(monthData.year, monthData.month - 1),
+                y: monthData.total
+            })
+        })
         var chart = new Chart(ctx, {
             type: 'line',
             data: {
                 datasets: [{
-                    label: 'Demo',
-                    data: [{
-                        t: "2015-03-15T13:03:00Z",
-                        y: 12
-                    },
-                        {
-                            t: "2015-03-25T13:02:00Z",
-                            y: 21
-                        },
-                        {
-                            t: "2015-04-25T14:12:00Z",
-                            y: 32
-                        }
-                    ],
+                    label: 'Wpłaty',
+                    data: data,
                     backgroundColor: [
                         'rgba(255, 99, 132, 0.2)',
                         'rgba(54, 162, 235, 0.2)',
@@ -56,20 +53,30 @@ var pmmChart = {
                 }]
             },
             options: {
+                legend: {
+                    display: false
+                },
                 scales: {
                     xAxes: [{
                         type: 'time',
                         distribution: 'linear',
                         time: {
-                            unit: 'month'
+                            unit: 'month',
+                            format: 'MM/YYYY',
+                            tooltipFormat:'MM/YYYY'
+                        },
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 10
                         }
                     }]
                 }
             }
         });
+        console.log(ctx);
     }
 };
 
 $(document).ready(function() {
-    pmmChart._init();
+    // pmmChart._init();
 });

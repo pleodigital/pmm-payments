@@ -32,27 +32,6 @@
 {# Get a URL to an image in our AssetBundle #}
 {% set iconUrl = view.getAssetManager().getPublishedUrl('@pleodigital/pmmpayments/assetbundles/paymentscpsection/dist', true) ~ '/img/Payments-icon.svg' %}
 
-{% set sidebar %}
-
-    {% set selectedSidebarItem = craft.app.request.getSegment(3) %}
-    {% set baseUrl = 'pmm-payments/list/' %}
-
-    <nav class="last sidebar-pmmpayments">
-        <ul>
-            <li>
-                <a href="{{ cpUrl(baseUrl~'payu') }}" class="load-entries sel">PayU</a>
-            </li>
-            <li>
-                <a href="{{ cpUrl(baseUrl~'paypal') }}" class="load-entries">PayPal</a>
-            </li>
-{#            <li>#}
-{#                <a href="{{ cpUrl(baseUrl~'chart') }}" class="stats sel">Statystyki</a>#}
-{#            </li>#}
-        </ul>
-    </nav>
-
-{% endset %}
-
 {% block content %}
     <div class="main">
         <div class="elements busy"></div>

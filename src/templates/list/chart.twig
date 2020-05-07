@@ -1,13 +1,23 @@
-{% do view.registerAssetBundle("pleodigital\\pmmpayments\\assetbundles\\paymentschart\\PaymentsChartAsset") %}
+{#{% do view.registerAssetBundle("pleodigital\\pmmpayments\\assetbundles\\paymentschart\\PaymentsChartAsset") %}#}
 {% set pluginName = 'pmm-payments' %}
 {% set providerName = 'chart' %}
 
 {% set baseUrl = pluginName ~ '/list/' %}
 {% set baseEntriesUrl = cpUrl(baseUrl ~ providerName) %}
 
-{#{% set projectFilter = craft.app.request.getQueryParam('projectFilter') ? craft.app.request.getQueryParam('projectFilter') : null %}#}
-{#{% set yearFilter = craft.app.request.getQueryParam('yearFilter') ? craft.app.request.getQueryParam('yearFilter') : null %}#}
-{#{% set monthFilter = craft.app.request.getQueryParam('monthFilter') ? craft.app.request.getQueryParam('monthFilter') : null %}#}
-{#{% set list = craft.payments.getPayPalPayments(page, sortBy, sortOrder, projectFilter, yearFilter, monthFilter) %}#}
+{% set projectFilter = craft.app.request.getQueryParam('projectFilter') ? craft.app.request.getQueryParam('projectFilter') : null %}
+{% set yearFilter = craft.app.request.getQueryParam('yearFilter') ? craft.app.request.getQueryParam('yearFilter') : null %}
+{% set monthFilter = craft.app.request.getQueryParam('monthFilter') ? craft.app.request.getQueryParam('monthFilter') : null %}
+
+{% set totals = craft.payments.getAllMonthsTotal(projectFilter, yearFilter, monthFilter) %}
+
+{% macro jsVar(variable, jsVariableName) %}
+    var {{jsVariableName}} = {{variable|json_encode|raw}};
+{% endmacro %}
 
 <div id="canvas-parent" style="position: relative; width: 100%;"><canvas id="canvas-stats"></canvas></div>
+{#{{ totals }}#}
+<script>
+    {{_self.jsVar(totals, 'totals')}}
+    pmmChart.buildChart();
+</script>

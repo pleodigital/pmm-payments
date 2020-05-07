@@ -176,9 +176,19 @@ class Pmmpayments extends Plugin
         $parent = parent :: getCpNavItem();
         $parent['label'] = 'Płatności';
 
-        $parent['subnav']['list'] = [
-            'label' => 'Lista płatności',
-            'url' => 'pmm-payments/list'
+        $parent['subnav']['payu'] = [
+            'label' => 'Payu',
+            'url' => 'pmm-payments/list/payu'
+        ];
+
+        $parent['subnav']['paypal'] = [
+            'label' => 'Paypal',
+            'url' => 'pmm-payments/list/paypal'
+        ];
+
+        $parent['subnav']['stats'] = [
+            'label' => 'Statystyki',
+            'url' => 'pmm-payments/list/chart'
         ];
 
         return $parent;

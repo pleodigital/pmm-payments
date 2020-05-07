@@ -16,6 +16,7 @@ var pmmPayments = {
     projectFilter: null,
     yearFilter: null,
     monthFilter: null,
+    subNav: '#nav-pmm-payments .subnav a',
 
 
     _init: function() {
@@ -24,9 +25,9 @@ var pmmPayments = {
     },
 
     registerEvents: function() {
-        $('.sidebar-pmmpayments a.load-entries').click(this.onChangePaymentsList);
-        $('.content-pane').on('click', 'a.load-entries', this.onRefreshEntries);
-        $('.content-pane').on('click', 'a.stats', this.onStats);
+        $(pmmPayments.subNav).click(this.onChangePaymentsList);
+        $('.content-pane').on('click', '#nav-pmm-payments .subnav a', this.onRefreshEntries);
+        $($(pmmPayments.subNav)[2]).click(this.onStats);
         $('body').on('click', 'ul.sort-attributes li a', this.onSetSortBy);
         $('body').on('click', 'ul.sort-directions li a', this.onSetSortOrder);
         $('body').on('click', 'ul.project-filters li a', (e) => this.onSetFilter(e, "p"));
@@ -37,15 +38,38 @@ var pmmPayments = {
     },
 
     onStats: function(event) {
+        $(".sortmenubtn").hide();
+        $(".month-filter-name").hide();
         event.preventDefault();
         console.log("onStats");
-        // pmmChart._init();
-        pmmPayments.onRefreshEntries(event);
+        $('.sidebar-pmmpayments a').not(this).removeClass('sel');
+        $(this).addClass('sel');
+        pmmPayments.clearFilters();
+
+        var element = $('.sidebar-pmmpayments a.sel');
+        $('.content-pane .main .elements').addClass('busy');
+        var url = $(element).attr('href') + '?';
+        console.log(this.projectFilter, this.yearFilter, this.monthFilter);
+        if(this.projectFilter) {
+            url += 'projectFilter=' + this.projectFilter + '&';
+        }
+        if(this.yearFilter) {
+            url += 'yearFilter=' + this.yearFilter + '&';
+        }
+        if(this.monthFilter) {
+            url += 'monthFilter=' + this.monthFilter + '&';
+        }
+        $.get(url, function(html) {
+            $('.content-pane .main .elements').html(html);
+            $('.content-pane .main .elements').removeClass('busy');
+        })
     },
 
     onChangePaymentsList: function(event) {
+        $(".sortmenubtn").show();
+        $(".month-filter-name").show();
         event.preventDefault();
-        $('.sidebar-pmmpayments a').not(this).removeClass('sel');
+        $(pmmPayments.subNav).not(this).removeClass('sel');
         $(this).addClass('sel');
         pmmPayments.clearFilters();
         pmmPayments.loadEntries(this);         
@@ -114,7 +138,7 @@ var pmmPayments = {
 
     loadEntries: function(element) {
         if(!element) {
-            element = $('.sidebar-pmmpayments a.sel');
+            element = $(pmmPayments.subNav + '.sel');
         }
         $('.content-pane .main .elements').addClass('busy');
         var url = $(element).attr('href') + '?';
