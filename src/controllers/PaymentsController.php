@@ -47,7 +47,7 @@ class PaymentsController extends Controller
      *         The actions must be in 'kebab-case'
      * @access protected
      */
-    protected $allowAnonymous = ['index'];
+    protected $allowAnonymous = ['index', 'check-status'];
 
     // Public Methods
     // =========================================================================
@@ -77,6 +77,18 @@ class PaymentsController extends Controller
         try {
             $request = Craft :: $app -> getRequest(); 
             $response = Pmmpayments :: $plugin -> payments -> exportCsv($request -> getQueryParam('provider'));
+        } catch (Exception $e) {
+            return 'Exporting went wrong.';
+        }
+    }
+
+    public function actionCheckStatus()
+    {
+        try {
+            $request = Craft :: $app -> getRequest();
+            $response = Pmmpayments :: $plugin -> payments -> checkStatus( $request );
+
+            return $this -> asJson($response);
         } catch (Exception $e) {
             return 'Exporting went wrong.';
         }

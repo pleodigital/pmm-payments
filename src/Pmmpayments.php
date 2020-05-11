@@ -91,6 +91,8 @@ class Pmmpayments extends Plugin
         if (Craft::$app instanceof ConsoleApplication) {
             $this->controllerNamespace = 'pleodigital\pmmpayments\console\controllers';
         }
+        
+
 
         // Register our site routes
         // Event::on(

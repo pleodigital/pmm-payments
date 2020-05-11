@@ -10,6 +10,8 @@
 
 namespace pleodigital\pmmpayments\services;
 
+use OpenPayU_Configuration;
+use OpenPayU_Order;
 use pleodigital\pmmpayments\Pmmpayments;
 
 use Craft;
@@ -53,8 +55,10 @@ class Payments extends Component
      */
     public function processRequestData($request)
     {
-        // Check our Plugin's settings for `someAttribute`
-        // Pmmpayments::$plugin->getSettings()->someAttribute
+//        $command = Yii::$app->db->createCommand();
+//        $command->update('pmmpayments_payment', array(
+//            'status'=>"COMPLETED",
+//        ), 'uid=:uid', array(':uid'=>'1b3dd04a-c9cb-41d1-80ca-a1693153f510'));
 
         $payment = new Payment();
         $payment -> setAttribute('project', $request -> getBodyParam('project'));
@@ -72,10 +76,59 @@ class Payments extends Component
             ];
         } else {
             $payment -> save();
-            return [
-                'message' => 'Pomyślnie zapisano płatność.',
-            ];
         }
+        OpenPayU_Configuration::setEnvironment('secure');
+        OpenPayU_Configuration::setMerchantPosId('145227');
+        OpenPayU_Configuration::setSignatureKey('13a980d4f851f3d9a1cfc792fb1f5e50');
+        OpenPayU_Configuration::setOauthClientId('145227');
+        OpenPayU_Configuration::setOauthClientSecret('12f071174cb7eb79d4aac5bc2f07563f');
+
+        // Check our Plugin's settings for `someAttribute`
+        // Pmmpayments::$plugin->getSettings()->someAttribute
+        $order['continueUrl'] = 'http://localhost/'; //customer will be redirected to this page after successfull payment
+        $order['notifyUrl'] = 'http://craft.polska-misja-medyczna.pleodev.usermd.net/actions/pmm-payments/payments/check-status';
+        $order['customerIp'] = $_SERVER['REMOTE_ADDR'];
+        $order['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
+        $order['description'] = $request -> getBodyParam('project');
+        $order['currencyCode'] = $request -> getBodyParam('currencyCode');
+        $order['totalAmount'] = $request -> getBodyParam('totalAmount')*100;
+        $order['extOrderId'] = $payment->uid;
+
+        $order['products'][0]['name'] = $request -> getBodyParam('project');
+        $order['products'][0]['unitPrice'] = $request -> getBodyParam('totalAmount')*100;
+        $order['products'][0]['quantity'] = 1;
+
+        $order['buyer']['email'] = $request -> getBodyParam('email');
+        $order['buyer']['firstName'] = $request -> getBodyParam('firstName');
+        $order['buyer']['lastName'] = $request -> getBodyParam('lastName');
+        $order['buyer']['language'] = $request -> getBodyParam('language');
+
+        $response = OpenPayU_Order::create($order);
+//        return print_r($response);
+//        header('Location:'.$response->getResponse()->redirectUri);
+        
+        Craft::$app->getMailer()->compose()->setTo($order['buyer']['email'])->setSubject('Polska Misja Medyczna')->setHtmlBody("
+        <p>Drogi Darczyńco!</p>
+        <p>Twoja darowizna to lekarstwa dla niemowląt w Zambii, paczka żywnościowa dla rodziny syryjskich uchodźców lub pomoc medyczna dla najuboższych kobiet w Senegalu.
+        Prowadzimy wiele działań na całym świecie. Nie byłoby to możliwe bez Twojej wpłaty. Razem budujemy pomoc.</p>
+        <p>Dziękujemy!</p>
+        <p>Zespół Polskiej Misji Medycznej</p>
+        ")->send();
+        
+        return $response->getResponse();
+
+    }
+
+    public function checkStatus($request) {
+        $body = file_get_contents('php://input');
+        $data = trim($body);
+        $json = json_decode(json_decode(json_encode($data)));
+        $status = json_decode($data,true)['order']['status'];
+        $id = json_decode($data,true)['order']['extOrderId'];
+
+        $payment = Payment::findOne(['uid'=>$id]);
+        $payment->status = $status;
+        $payment->save();
     }
 
     public function getAllMonthsTotal($projectFilter = "%", $yearFilter = "%", $monthFilter = "%") {
@@ -83,7 +136,7 @@ class Payments extends Component
             MONTH(dateCreated) as month,
             SUM(amount) AS total
             FROM pmmpayments_payment
-            WHERE (project LIKE '%$projectFilter%') AND (MONTH(dateCreated) LIKE '%$monthFilter%') AND (YEAR(dateCreated) LIKE '%$yearFilter%')
+            WHERE (project LIKE '%$projectFilter%') AND (MONTH(dateCreated) LIKE '%$monthFilter%') AND (YEAR(dateCreated) LIKE '%$yearFilter%') AND status='COMPLETED'
             GROUP BY YEAR(dateCreated), MONTH(dateCreated)
         ";
 
@@ -153,7 +206,7 @@ class Payments extends Component
     public function exportCsv($providerName)
     {
         $provider = $this -> getProviderByName($providerName);
-        $entries = Payment :: find() -> where(['provider' => $provider]) -> asArray() -> all(); 
+        $entries = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "status='COMPLETED'"]) -> asArray() -> all();
 
         $writer = Writer :: createFromFileObject(new SplTempFileObject());                 
         $writer -> insertOne(array_keys($entries[0]));
@@ -182,11 +235,11 @@ class Payments extends Component
         $lastDayOfThisMonth = date('Y-m-t 12:59:59');
         $firstDayOfThisYear = date('Y-01-01 00:00:00');
         $lastDayOfThisYear = date('Y-12-31 00:00:00');
-        $entriesMonth = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "dateCreated >= '$firstDayOfThisMonth'", "dateCreated <= '$lastDayOfThisMonth'"]) -> asArray() -> all();
-        $entriesYear = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "dateCreated >= '$firstDayOfThisYear'", "dateCreated <= '$lastDayOfThisYear'"]) -> asArray() -> all();
-        $entriesTotal = Payment :: find() -> where(['provider' => $provider]) -> asArray() -> all();
+        $entriesMonth = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "status='COMPLETED'", "dateCreated >= '$firstDayOfThisMonth'", "dateCreated <= '$lastDayOfThisMonth'"]) -> asArray() -> all();
+        $entriesYear = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "status='COMPLETED'", "dateCreated >= '$firstDayOfThisYear'", "dateCreated <= '$lastDayOfThisYear'"]) -> asArray() -> all();
+        $entriesTotal = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "status='COMPLETED'"]) -> asArray() -> all();
 //        $query = Payment :: find() -> where(['provider' => $provider]);
-        $filters = ['and'];
+        $filters = ['and', "status = 'COMPLETED'"];
 
 
         if ($projectFilter) {
