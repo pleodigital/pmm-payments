@@ -1,20 +1,14 @@
 <?php
-/**
- * pmm-payments plugin for Craft CMS 3.x
- *
- * Payment processing plugin for the Polish Medical Mission
- *
- * @link      https://pleodigital.com/
- * @copyright Copyright (c) 2020 Pleo Digtial
- */
 
 namespace pleodigital\pmmpayments\services;
 
+use craft\records\Entry;
 use OpenPayU_Configuration;
 use OpenPayU_Order;
 use pleodigital\pmmpayments\Pmmpayments;
 
 use Craft;
+//use craft\elements\Entry;
 use Yii;
 use yii\data\ActiveDataProvider;
 use League\Csv\Writer;
@@ -24,69 +18,58 @@ use craft\helpers\Json;
 use pleodigital\pmmpayments\records\Payment;
 use yii\data\SqlDataProvider;
 
-/**
- * Payments Service
- *
- * All of your plugin’s business logic should go in services, including saving data,
- * retrieving data, etc. They provide APIs that your controllers, template variables,
- * and other plugins can interact with.
- *
- * https://craftcms.com/docs/plugins/services
- *
- * @author    Pleo Digtial
- * @package   Pmmpayments
- * @since     1.0.0
- */
 class Payments extends Component
 {
-    const ENTRIES_ON_PAGE = 50;
-    // Public Methods
-    // =========================================================================
+    const ENTRIES_ON_PAGE= 50;
 
-    /**
-     * This function can literally be anything you want, and you can have as many service
-     * functions as you want
-     *
-     * From any other plugin file, call it like this:
-     *
-     *     Pmmpayments::$plugin->payments->processRequestData()
-     *
-     * @return mixed
-     */
-    public function processRequestData($request)
-    {
-//        $command = Yii::$app->db->createCommand();
-//        $command->update('pmmpayments_payment', array(
-//            'status'=>"COMPLETED",
-//        ), 'uid=:uid', array(':uid'=>'1b3dd04a-c9cb-41d1-80ca-a1693153f510'));
+public function processRequestData($request)
+{
+    $entry;
+    $idWplaty;
 
-        $payment = new Payment();
-        $payment -> setAttribute('project', $request -> getBodyParam('project'));
-        $payment -> setAttribute('title', $request -> getBodyParam('title'));
-        $payment -> setAttribute('firstName', $request -> getBodyParam('firstName'));
-        $payment -> setAttribute('lastName', $request -> getBodyParam('lastName'));
-        $payment -> setAttribute('email', $request -> getBodyParam('email'));
-        $payment -> setAttribute('amount', $request -> getBodyParam('amount'));
-        $payment -> setAttribute('isRecurring', $request -> getBodyParam('isRecurring') === 'true');
-        $payment -> setAttribute('provider', (int)$request -> getBodyParam('provider'));
+    if($request->getBodyParam('craftId') == 0) {
+        $tempEntry = \craft\elements\Entry::find()->section('moduly')->slug('moduł-wpłaty')->one()->modulWplatyPmm;
 
-        if( !$payment -> validate() ) {
-            return [
-                'error' => 'Nie udało się zapisać płatności. Niepoprawne dane.',
-            ];
-        } else {
-            $payment -> save();
+        foreach ($tempEntry as $subentry) {
+            if ($subentry->payuDrugiKlucz) {
+                $entry = $subentry;
+            }
         }
         OpenPayU_Configuration::setEnvironment('secure');
-        OpenPayU_Configuration::setMerchantPosId('145227');
-        OpenPayU_Configuration::setSignatureKey('13a980d4f851f3d9a1cfc792fb1f5e50');
-        OpenPayU_Configuration::setOauthClientId('145227');
-        OpenPayU_Configuration::setOauthClientSecret('12f071174cb7eb79d4aac5bc2f07563f');
+        OpenPayU_Configuration::setMerchantPosId($entry->identyfikatorWplaty);
+        OpenPayU_Configuration::setSignatureKey($entry->payuDrugiKlucz);
+        OpenPayU_Configuration::setOauthClientId($entry->identyfikatorWplaty);
+        OpenPayU_Configuration::setOauthClientSecret($entry->payuOAuth);
+    } else {
+        $entry = \craft\elements\Entry::find()->id($request->getBodyParam('craftId'))->one();
+        OpenPayU_Configuration::setEnvironment('secure');
+        OpenPayU_Configuration::setMerchantPosId($entry->wplatyIdentyfikatorWplaty);
+        OpenPayU_Configuration::setSignatureKey($entry->wplatyPayuDrugiKlucz);
+        OpenPayU_Configuration::setOauthClientId($entry->wplatyIdentyfikatorWplaty);
+        OpenPayU_Configuration::setOauthClientSecret($entry->wplatyPayuOAuth);
+    }
 
-        // Check our Plugin's settings for `someAttribute`
-        // Pmmpayments::$plugin->getSettings()->someAttribute
-        $order['continueUrl'] = 'http://localhost/'; //customer will be redirected to this page after successfull payment
-        $order['notifyUrl'] = 'http://craft.polska-misja-medyczna.pleodev.usermd.net/actions/pmm-payments/payments/check-status';
+    $payment = new Payment();
+    $payment -> setAttribute('project', $request -> getBodyParam('project'));
+    $payment -> setAttribute('title', $request -> getBodyParam('title'));
+    $payment -> setAttribute('firstName', $request -> getBodyParam('firstName'));
+    $payment -> setAttribute('lastName', $request -> getBodyParam('lastName'));
+    $payment -> setAttribute('email', $request -> getBodyParam('email'));
+    $payment -> setAttribute('amount', $request -> getBodyParam('totalAmount'));
+    $payment -> setAttribute('isRecurring', $request -> getBodyParam('isRecurring') == '1');
+    $payment -> setAttribute('provider', (int)$request -> getBodyParam('provider'));
+    $payment -> setAttribute('status', "STARTED");
+
+    if( !$payment -> validate() ) {
+        return [
+            'error' => 'Nie udało się zapisać płatności. Niepoprawne dane.',
+            ];
+        } else {
+        $payment -> save();
+    }
+
+    $order['continueUrl'] = Craft::$app->config->general->payUPaymentThanksPage;
+        $order['notifyUrl'] = Craft::$app->config->general->paymentStatus;
         $order['customerIp'] = $_SERVER['REMOTE_ADDR'];
         $order['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
         $order['description'] = $request -> getBodyParam('project');
@@ -103,19 +86,27 @@ class Payments extends Component
         $order['buyer']['lastName'] = $request -> getBodyParam('lastName');
         $order['buyer']['language'] = $request -> getBodyParam('language');
 
+        if ($payment->isRecurring) {
+            $order['recurring'] = "STANDARD";
+            $command = Yii::$app->db->createCommand(
+                "INSERT INTO pmmpayments_tokens(`token`,`project`,`title`,`provider`,`currencyCode`,`totalAmount`,`email`, `language`, `firstName`, `lastName`)VALUES ('"
+                .$payment->uid."', '" .$request -> getBodyParam("project")."', '".$request -> getBodyParam("title")."', '".$request -> getBodyParam("provider")."','"
+                .$request -> getBodyParam("currencyCode")."', '".$request -> getBodyParam("totalAmount")."', '".$request -> getBodyParam("email")."','"
+                .$request -> getBodyParam("language")."', '".$request -> getBodyParam("firstName")."', '".$request -> getBodyParam("lastName")."')");
+            $command->execute();
+        }
+
         $response = OpenPayU_Order::create($order);
-//        return print_r($response);
-//        header('Location:'.$response->getResponse()->redirectUri);
-        
+
         Craft::$app->getMailer()->compose()->setTo($order['buyer']['email'])->setSubject('Polska Misja Medyczna')->setHtmlBody("
-        <p>Drogi Darczyńco!</p>
+    <p>Drogi Darczyńco!</p>
         <p>Twoja darowizna to lekarstwa dla niemowląt w Zambii, paczka żywnościowa dla rodziny syryjskich uchodźców lub pomoc medyczna dla najuboższych kobiet w Senegalu.
-        Prowadzimy wiele działań na całym świecie. Nie byłoby to możliwe bez Twojej wpłaty. Razem budujemy pomoc.</p>
+Prowadzimy wiele działań na całym świecie. Nie byłoby to możliwe bez Twojej wpłaty. Razem budujemy pomoc.</p>
         <p>Dziękujemy!</p>
         <p>Zespół Polskiej Misji Medycznej</p>
-        ")->send();
-        
-        return $response->getResponse();
+")->send();
+
+        return $response->getResponse()->redirectUri;
 
     }
 
@@ -208,7 +199,7 @@ class Payments extends Component
         $provider = $this -> getProviderByName($providerName);
         $entries = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "status='COMPLETED'"]) -> asArray() -> all();
 
-        $writer = Writer :: createFromFileObject(new SplTempFileObject());                 
+        $writer = Writer :: createFromFileObject(new SplTempFileObject());
         $writer -> insertOne(array_keys($entries[0]));
         $writer -> insertAll($entries);
         $writer -> output('payments-' . $providerName . '.csv');
@@ -221,10 +212,10 @@ class Payments extends Component
         switch($providerName) {
             case 'payu':
                 $provider = 1;
-            break;
+                break;
             case 'paypal':
                 $provider = 2;
-            break;
+                break;
         }
         return $provider;
     }
@@ -263,30 +254,14 @@ class Payments extends Component
             ],
             'sort' => [
                 'defaultOrder' => [
-                    $sortBy => $sortOrder === 'DESC' ? SORT_DESC : SORT_ASC,
+                        $sortBy => $sortOrder === 'DESC' ? SORT_DESC: SORT_ASC,
                     'dateCreated' => SORT_DESC,
                 ]
             ]
         ]);
-//        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM pmmpayments_payment WHERE provider=:provider', [':provider' => $provider])->queryScalar();
-//        $activeDataProvider = new SqlDataProvider([
-//            'sql' => "SELECT * FROM pmmpayments_payment WHERE provider=:provider",
-//            'params' => [':provider' => $provider],
-//            'totalCount' => $count,
-//            'pagination' => [
-//                'pageSize' => self :: ENTRIES_ON_PAGE,
-//                'page' => $page - 1
-//            ],
-//            'sort' => [
-//                'defaultOrder' => [
-//                    $sortBy => $sortOrder === 'DESC' ? SORT_DESC : SORT_ASC,
-//                    'dateCreated' => SORT_DESC,
-//                ]
-//            ]
-//        ]);
 
         $entries = $activeDataProvider -> getModels();
-        $countFrom = self :: ENTRIES_ON_PAGE * ($page - 1) + 1;
+        $countFrom = self :: ENTRIES_ON_PAGE* ($page - 1) + 1;
         $countTo = $countFrom + count($entries) - 1;
         $countAll = $activeDataProvider -> getTotalCount();
 
@@ -312,8 +287,8 @@ class Payments extends Component
     }
 
     static function mapEntries($entry)
-    { 
-        $entry -> isRecurring = $entry -> isRecurring ? 'Płatność cykliczna' : 'Płatność jednorazowa' ; 
+    {
+        $entry -> isRecurring = $entry -> isRecurring ? 'Płatność cykliczna' : 'Płatność jednorazowa' ;
         return $entry;
     }
 
@@ -332,9 +307,10 @@ class Payments extends Component
     }
 
     static function sum($carry, $item)
-    { 
+    {
         $carry += $item['amount'];
         return $carry;
     }
 
 }
+
