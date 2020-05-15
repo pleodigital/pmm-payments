@@ -22,53 +22,52 @@ class Payments extends Component
 {
     const ENTRIES_ON_PAGE= 50;
 
-public function processRequestData($request)
-{
-    $entry;
-    $idWplaty;
-
-    if($request->getBodyParam('craftId') == 0) {
-        $tempEntry = \craft\elements\Entry::find()->section('moduly')->slug('moduł-wpłaty')->one()->modulWplatyPmm;
-
-        foreach ($tempEntry as $subentry) {
-            if ($subentry->payuDrugiKlucz) {
-                $entry = $subentry;
-            }
-        }
-        OpenPayU_Configuration::setEnvironment('secure');
-        OpenPayU_Configuration::setMerchantPosId($entry->identyfikatorWplaty);
-        OpenPayU_Configuration::setSignatureKey($entry->payuDrugiKlucz);
-        OpenPayU_Configuration::setOauthClientId($entry->identyfikatorWplaty);
-        OpenPayU_Configuration::setOauthClientSecret($entry->payuOAuth);
-    } else {
-        $entry = \craft\elements\Entry::find()->id($request->getBodyParam('craftId'))->one();
-        OpenPayU_Configuration::setEnvironment('secure');
-        OpenPayU_Configuration::setMerchantPosId($entry->wplatyIdentyfikatorWplaty);
-        OpenPayU_Configuration::setSignatureKey($entry->wplatyPayuDrugiKlucz);
-        OpenPayU_Configuration::setOauthClientId($entry->wplatyIdentyfikatorWplaty);
-        OpenPayU_Configuration::setOauthClientSecret($entry->wplatyPayuOAuth);
+    private function sendEmail($email) {
+        Craft::$app->getMailer()->compose()->setTo($email)->setSubject('Polska Misja Medyczna')->setHtmlBody("
+            <p>Drogi Darczyńco!</p>
+                <p>Twoja darowizna to lekarstwa dla niemowląt w Zambii, paczka żywnościowa dla rodziny syryjskich uchodźców lub pomoc medyczna dla najuboższych kobiet w Senegalu.
+        Prowadzimy wiele działań na całym świecie. Nie byłoby to możliwe bez Twojej wpłaty. Razem budujemy pomoc.</p>
+                <p>Dziękujemy!</p>
+                <p>Zespół Polskiej Misji Medycznej</p>
+        ")->send();
     }
 
-    $payment = new Payment();
-    $payment -> setAttribute('project', $request -> getBodyParam('project'));
-    $payment -> setAttribute('title', $request -> getBodyParam('title'));
-    $payment -> setAttribute('firstName', $request -> getBodyParam('firstName'));
-    $payment -> setAttribute('lastName', $request -> getBodyParam('lastName'));
-    $payment -> setAttribute('email', $request -> getBodyParam('email'));
-    $payment -> setAttribute('amount', $request -> getBodyParam('totalAmount'));
-    $payment -> setAttribute('isRecurring', $request -> getBodyParam('isRecurring') == '1');
-    $payment -> setAttribute('provider', (int)$request -> getBodyParam('provider'));
-    $payment -> setAttribute('status', "STARTED");
+    private function payuPayment($request, $payment) {
+        $entry;
+        $idWplaty;
 
-    if( !$payment -> validate() ) {
-        return [
-            'error' => 'Nie udało się zapisać płatności. Niepoprawne dane.',
+        if($request->getBodyParam('craftId') == 0) {
+            $tempEntry = \craft\elements\Entry::find()->section('moduly')->slug('moduł-wpłaty')->one()->modulWplatyPmm;
+
+            foreach ($tempEntry as $subentry) {
+                if ($subentry->payuDrugiKlucz) {
+                    $entry = $subentry;
+                }
+            }
+            OpenPayU_Configuration::setEnvironment('secure');
+            OpenPayU_Configuration::setMerchantPosId($entry->identyfikatorWplaty);
+            OpenPayU_Configuration::setSignatureKey($entry->payuDrugiKlucz);
+            OpenPayU_Configuration::setOauthClientId($entry->identyfikatorWplaty);
+            OpenPayU_Configuration::setOauthClientSecret($entry->payuOAuth);
+        } else {
+            $entry = \craft\elements\Entry::find()->id($request->getBodyParam('craftId'))->one();
+            OpenPayU_Configuration::setEnvironment('secure');
+            OpenPayU_Configuration::setMerchantPosId($entry->wplatyIdentyfikatorWplaty);
+            OpenPayU_Configuration::setSignatureKey($entry->wplatyPayuDrugiKlucz);
+            OpenPayU_Configuration::setOauthClientId($entry->wplatyIdentyfikatorWplaty);
+            OpenPayU_Configuration::setOauthClientSecret($entry->wplatyPayuOAuth);
+        }
+
+        $payment -> setAttribute('status', "STARTED");
+        if( !$payment -> validate() ) {
+            return [
+                'error' => 'Nie udało się zapisać płatności. Niepoprawne dane.',
             ];
         } else {
-        $payment -> save();
-    }
+            $payment -> save();
+        }
 
-    $order['continueUrl'] = Craft::$app->config->general->payUPaymentThanksPage;
+        $order['continueUrl'] = Craft::$app->config->general->payUPaymentThanksPage;
         $order['notifyUrl'] = Craft::$app->config->general->paymentStatus;
         $order['customerIp'] = $_SERVER['REMOTE_ADDR'];
         $order['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
@@ -87,7 +86,7 @@ public function processRequestData($request)
         $order['buyer']['language'] = $request -> getBodyParam('language');
 
         if ($payment->isRecurring) {
-            $order['recurring'] = "STANDARD";
+            $order['recurring'] = "FIRST";
             $command = Yii::$app->db->createCommand(
                 "INSERT INTO pmmpayments_tokens(`token`,`project`,`title`,`provider`,`currencyCode`,`totalAmount`,`email`, `language`, `firstName`, `lastName`)VALUES ('"
                 .$payment->uid."', '" .$request -> getBodyParam("project")."', '".$request -> getBodyParam("title")."', '".$request -> getBodyParam("provider")."','"
@@ -98,28 +97,53 @@ public function processRequestData($request)
 
         $response = OpenPayU_Order::create($order);
 
-        Craft::$app->getMailer()->compose()->setTo($order['buyer']['email'])->setSubject('Polska Misja Medyczna')->setHtmlBody("
-    <p>Drogi Darczyńco!</p>
-        <p>Twoja darowizna to lekarstwa dla niemowląt w Zambii, paczka żywnościowa dla rodziny syryjskich uchodźców lub pomoc medyczna dla najuboższych kobiet w Senegalu.
-Prowadzimy wiele działań na całym świecie. Nie byłoby to możliwe bez Twojej wpłaty. Razem budujemy pomoc.</p>
-        <p>Dziękujemy!</p>
-        <p>Zespół Polskiej Misji Medycznej</p>
-")->send();
+        return $response;
+    }
 
-        return $response->getResponse()->redirectUri;
+    public function processRequestData($request)
+    {
+        $response;
+        $payment = new Payment();
+        $payment -> setAttribute('project', $request -> getBodyParam('project'));
+        $payment -> setAttribute('title', $request -> getBodyParam('title'));
+        $payment -> setAttribute('firstName', $request -> getBodyParam('firstName'));
+        $payment -> setAttribute('lastName', $request -> getBodyParam('lastName'));
+        $payment -> setAttribute('email', $request -> getBodyParam('email'));
+        $payment -> setAttribute('amount', $request -> getBodyParam('totalAmount'));
+        $payment -> setAttribute('isRecurring', $request -> getBodyParam('isRecurring') == 'true');
+        $payment -> setAttribute('provider', (int)$request -> getBodyParam('provider'));
 
+        if ($request->getBodyParam('provider') == '1') {
+            $response = $this->payuPayment($request, $payment);
+
+            return $response->getResponse()->redirectUri;
+        } else {
+            $payment->status = "COMPLETED";
+        }
+
+        if( !$payment -> validate() ) {
+            return [
+                'error' => 'Nie udało się zapisać płatności. Niepoprawne dane.',
+            ];
+        } else {
+            $payment -> save();
+        }
+
+        return true;
     }
 
     public function checkStatus($request) {
         $body = file_get_contents('php://input');
         $data = trim($body);
-        $json = json_decode(json_decode(json_encode($data)));
+//        $json = json_decode(json_decode(json_encode($data)));
         $status = json_decode($data,true)['order']['status'];
         $id = json_decode($data,true)['order']['extOrderId'];
+        $email = json_decode($data,true)['order']['buyer']['email'];
 
         $payment = Payment::findOne(['uid'=>$id]);
         $payment->status = $status;
         $payment->save();
+        $this->sendEmail($email);
     }
 
     public function getAllMonthsTotal($projectFilter = "%", $yearFilter = "%", $monthFilter = "%") {
@@ -254,7 +278,7 @@ Prowadzimy wiele działań na całym świecie. Nie byłoby to możliwe bez Twoje
             ],
             'sort' => [
                 'defaultOrder' => [
-                        $sortBy => $sortOrder === 'DESC' ? SORT_DESC: SORT_ASC,
+                    $sortBy => $sortOrder === 'DESC' ? SORT_DESC: SORT_ASC,
                     'dateCreated' => SORT_DESC,
                 ]
             ]
@@ -266,7 +290,7 @@ Prowadzimy wiele działań na całym świecie. Nie byłoby to możliwe bez Twoje
         $countAll = $activeDataProvider -> getTotalCount();
 
 
-                            // {# <td>{{ row.isRecurring == '0' ? 'Płatność jednorazowa' : 'Płatność cykliczna' }}</td> #}
+        // {# <td>{{ row.isRecurring == '0' ? 'Płatność jednorazowa' : 'Płatność cykliczna' }}</td> #}
         return [
             'columns' => $this -> getColumns(),
             'entries' => array_map("self::mapEntries", $entries),
