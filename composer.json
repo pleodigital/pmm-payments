@@ -25,7 +25,8 @@
         "craftcms/cms": "^3.0.0-RC1",
         "league/csv": "^8.2",
         "ext-curl": "*",
-        "openpayu/openpayu" : "2.2.*"
+        "openpayu/openpayu" : "2.2.*",
+        "paypal/paypal-checkout-sdk": "1.0.1"
     },
     "autoload": {
         "psr-4": {
