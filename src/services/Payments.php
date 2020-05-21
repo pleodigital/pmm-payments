@@ -5,6 +5,10 @@ namespace pleodigital\pmmpayments\services;
 use craft\records\Entry;
 use OpenPayU_Configuration;
 use OpenPayU_Order;
+use PayPalCheckoutSdk\Core\PayPalHttpClient;
+use PayPalCheckoutSdk\Core\ProductionEnvironment;
+use PayPalCheckoutSdk\Core\SandboxEnvironment;
+use PayPalCheckoutSdk\Orders\OrdersCreateRequest;
 use pleodigital\pmmpayments\Pmmpayments;
 
 use Craft;
@@ -100,6 +104,51 @@ class Payments extends Component
         return $response;
     }
 
+    private function paypalPayment($request, $payment) {
+        $payment -> setAttribute('status', "STARTED");
+        if( !$payment -> validate() ) {
+            return [
+                'error' => 'Nie udało się zapisać płatności. Niepoprawne dane.',
+            ];
+        } else {
+            $payment -> save();
+        }
+//        $clientId = 'AbaGyMki95r33bdnwlPX_2hgYTk-wgV-VDrQ9iCE_wYdunYJGNPA6MiujboJt8zdlL2IcI4rMpos_R1p';
+//        $clientSecret = 'EP7XSoF8vVJztsQExb1mqSMMm4Af2YBIGmsaGGL28Dc2LT3PO4UcG95JToBB5TyefzEqVEQtkUqouWn7';
+        $clientId = 'ARVs5OXr63WtrG15a1hAQYPAnknN9H1IdyXgT6tqkh7-QdTAQWnOuK43XVgkBxYYZOx5wA1H-EuUXcVJ';
+        $clientSecret = 'EGB_nZqRoH7JAXzchuF4Gmaht2i0m3wcA4J3w_XAYM_3sDiMANO-mi5CgbQAzMGVQ6whVkYbHCu2L4si';
+        $env = new SandboxEnvironment($clientId, $clientSecret);
+        $client = new PayPalHttpClient($env);
+
+        $order = new OrdersCreateRequest();
+        $order->prefer('return=representation');
+        $order->body = [
+            'intent' => 'CAPTURE',
+            'application_context' =>
+                array(
+                    'return_url' => Craft::$app->config->general->paymentStatus,
+                    'cancel_url' => Craft::$app->config->general->payUPaymentThanksPage
+                ),
+            'purchase_units' =>
+                array(
+                    0 =>
+                        array(
+                            'amount' =>
+                                array(
+                                    'currency_code' => 'PLN',
+                                    'value' => $request->getBodyParam('totalAmount')
+                                ),
+                            'custom_id' => $payment->uid,
+                            'description' => $request->getBodyParam('project')
+                        )
+                )
+        ];
+//        $asd = PayPalClient::client();
+        $response = $client->execute($order);
+//        return $response->result->links[1]->href;
+        return print_r($response);
+    }
+
     public function processRequestData($request)
     {
         $response;
@@ -118,7 +167,9 @@ class Payments extends Component
 
             return $response->getResponse()->redirectUri;
         } else {
-            $payment->status = "COMPLETED";
+            $response = $this->paypalPayment($request, $payment);
+
+            return $response;
         }
 
         if( !$payment -> validate() ) {
@@ -144,6 +195,26 @@ class Payments extends Component
         $payment->status = $status;
         $payment->save();
         $this->sendEmail($email);
+    }
+
+    public function checkPaypalStatus($request) {
+        $body = file_get_contents('php://input');
+        $data = trim($body);
+        $json = json_decode(json_decode(json_encode($data)));
+//        $file = fopen("notify.txt", 'w');
+//        fwrite($file, $data);
+        return $json;
+//        $body = file_get_contents('php://input');
+//        $data = trim($body);
+////        $json = json_decode(json_decode(json_encode($data)));
+//        $status = json_decode($data,true)['order']['status'];
+//        $id = json_decode($data,true)['order']['extOrderId'];
+//        $email = json_decode($data,true)['order']['buyer']['email'];
+//
+//        $payment = Payment::findOne(['uid'=>$id]);
+//        $payment->status = $status;
+//        $payment->save();
+//        $this->sendEmail($email);
     }
 
     public function getAllMonthsTotal($projectFilter = "%", $yearFilter = "%", $monthFilter = "%") {
