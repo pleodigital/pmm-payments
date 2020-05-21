@@ -2,7 +2,7 @@
     "name": "pleodigital/pmm-payments",
     "description": "Payment processing plugin for the Polish Medical Mission",
     "type": "craft-plugin",
-    "version": "1.0.15",
+    "version": "1.0.17",
     "keywords": [
         "craft",
         "cms",
@@ -26,7 +26,7 @@
         "league/csv": "^8.2",
         "ext-curl": "*",
         "openpayu/openpayu" : "2.2.*",
-        "paypal/paypal-checkout-sdk": "1.0.1"
+        "paypal/paypal-checkout-sdk": "^1.0.1"
     },
     "autoload": {
         "psr-4": {

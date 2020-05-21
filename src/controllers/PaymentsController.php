@@ -69,13 +69,13 @@ class PaymentsController extends Controller
         } catch (Exception $e) {
             return 'Saving data went wrong.';
         }
-        
+
     }
 
     public function actionExportCsv()
     {
         try {
-            $request = Craft :: $app -> getRequest(); 
+            $request = Craft :: $app -> getRequest();
             $response = Pmmpayments :: $plugin -> payments -> exportCsv($request -> getQueryParam('provider'));
         } catch (Exception $e) {
             return 'Exporting went wrong.';
@@ -87,6 +87,18 @@ class PaymentsController extends Controller
         try {
             $request = Craft :: $app -> getRequest();
             $response = Pmmpayments :: $plugin -> payments -> checkStatus( $request );
+
+            return $this -> asJson($response);
+        } catch (Exception $e) {
+            return 'Exporting went wrong.';
+        }
+    }
+
+    public function actionCheckPaypalStatus()
+    {
+        try {
+            $request = Craft :: $app -> getRequest();
+            $response = Pmmpayments :: $plugin -> payments -> checkPaypalStatus( $request );
 
             return $this -> asJson($response);
         } catch (Exception $e) {
