@@ -47,7 +47,7 @@ class PaymentsController extends Controller
      *         The actions must be in 'kebab-case'
      * @access protected
      */
-    protected $allowAnonymous = ['index', 'check-payu-status', 'check-paypal-status', 'check-paypal-sub', 'paypal-monthly-payment', 'check-monthly-payments', 'cancel-subscription'];
+    protected $allowAnonymous = ['index', 'check-payu-status', 'check-paypal-status', 'paypal-activate-sub', 'check-paypal-sub', 'paypal-monthly-payment', 'ed2a2a984c0289c0a1ddb44029121aae', 'cancel-subscription'];
 
     // Public Methods
     // =========================================================================
@@ -118,6 +118,18 @@ class PaymentsController extends Controller
         }
     }
 
+    public function actionPaypalActivateSub()
+    {
+        try {
+            $request = Craft :: $app -> getRequest();
+            $response = Pmmpayments :: $plugin -> payments -> checkPaypalActivation( $request );
+
+            return $this -> asJson($response);
+        } catch (Exception $e) {
+            return 'Exporting went wrong.';
+        }
+    }
+
 //    public function actionPaypalMonthlyPayment()
 //    {
 //        try {
@@ -130,7 +142,7 @@ class PaymentsController extends Controller
 //        }
 //    }
 
-    public function actionCheckMonthlyPayments()
+    public function actionEd2a2a984c0289c0a1ddb44029121aae()
     {
         try {
             $response = Pmmpayments :: $plugin -> payments -> checkMonthlyPayments();

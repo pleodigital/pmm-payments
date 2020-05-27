@@ -39,6 +39,26 @@ class Payments extends Component
         ".$additives)->send();
     }
 
+    public function checkPaypalActivation($request) {
+        $body = file_get_contents('php://input');
+        $data = trim($body);
+        $json = json_decode($data);
+        $file = fopen("paypalActivate.txt", 'w');
+        fwrite($file, $data);
+
+        $id = $json->resource->id;
+        $status = $json->resource->status;
+        $email = json_decode($data,true)['resource']['subscriber']['email_address'];
+
+        $command = Yii::$app->db->createCommand("UPDATE pmmpayments_tokens SET status='ACTIVE' where token='".$id."'");
+        $command->execute();
+        $this->sendEmail($email,
+            "<br><br><p style='font-size: 10px; color: lightgray'>Anulowanie subskrypcji:
+            ".Craft::$app->config->general->cancelSubscription."/?id=".$id."</p>");
+
+        return $json;
+    }
+
     public function checkMonthlyPayments() {
         $sql = 'SELECT * FROM pmmpayments_tokens WHERE dateUpdated <= (now() - interval 1 MONTH)';
 
@@ -213,7 +233,7 @@ class Payments extends Component
         } else {
             $clientId = Craft::$app->config->general->paypalId;
             $clientSecret = Craft::$app->config->general->paypalSecret;
-            $env = new SandboxEnvironment($clientId, $clientSecret);
+            $env = new ProductionEnvironment($clientId, $clientSecret);
             $client = new PayPalHttpClient($env);
 
             $order = new OrdersCreateRequest();
@@ -240,8 +260,8 @@ class Payments extends Component
                     )
             ];
             $response = $client->execute($order);
-//        return $response->result->links[1]->href;
-            return print_r($response);
+            return $response->result->links[1]->href;
+//            return print_r($response);
         }
     }
 
@@ -351,10 +371,15 @@ class Payments extends Component
         $file = fopen("paypalstatus.txt", 'w');
         fwrite($file, $data);
 
-        $id = json_decode($data, true)['id'];
-        $subId = json_decode($data, true)['resource']['id'];
-        $email = json_decode($data,true)['resource']['subscriber']['email_address'];
-        $status = json_decode($data,true)['resource']['status'];
+
+//        $id = json_decode($data, true)['id'];
+//        $subId = json_decode($data, true)['resource']['id'];
+//        $email = json_decode($data,true)['resource']['purchase_units']['payee']['email_address'];
+//        $status = json_decode($data,true)['resource']['status'];
+        $id = $json->resource->purchase_units[0]->custom_id;
+//        $subId = json_decode($data, true)['resource']['id'];
+        $email = $json->resource->purchase_units[0]->payee->email_address;
+        $status = $json->resource->status;
         $payment = Payment::findOne(['uid'=>$id]);
         if($status == "APPROVED") {
             $payment->status = "COMPLETED";
@@ -362,7 +387,8 @@ class Payments extends Component
             $payment->status = $status;
         }
         $payment->save();
-        $this->sendEmail($email);
+        $this->sendEmail($payment->email);
+        return $payment->email;
     }
 
     public function checkPaypalSubStatus($request) {
@@ -374,9 +400,13 @@ class Payments extends Component
 
         $id = $json->resource->id;
         $status = $json->resource->status;
+        $email = json_decode($data,true)['resource']['subscriber']['email_address'];
 
         $command = Yii::$app->db->createCommand("UPDATE pmmpayments_tokens SET status='".$status."' where token='".$id."'");
         $command->execute();
+//        $this->sendEmail($email,
+//            "<br><br><p style='font-size: 10px; color: lightgray'>Anulowanie subskrypcji:
+//            ".Craft::$app->config->general->cancelSubscription."/?id=".$id."</p>");
 
         return $json;
     }
