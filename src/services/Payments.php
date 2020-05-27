@@ -290,7 +290,6 @@ class Payments extends Component
         $response = json_decode(curl_exec($ch));
 
         curl_close($ch);
-        return $response;
 
         $command = Yii::$app->db->createCommand(
             "INSERT INTO pmmpayments_tokens(`token`,`project`,`title`,`provider`,`currencyCode`,`totalAmount`,`email`, `language`, `firstName`, `lastName`, `status`)VALUES ('"
