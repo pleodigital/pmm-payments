@@ -32,8 +32,10 @@ class Payments extends Component
     private function sendEmail($email, $additives = '') {
         Craft::$app->getMailer()->compose()->setTo($email)->setSubject('Polska Misja Medyczna')->setHtmlBody("
             <p>Drogi Darczyńco!</p>
-                <p>Twoja darowizna to lekarstwa dla niemowląt w Zambii, paczka żywnościowa dla rodziny syryjskich uchodźców lub pomoc medyczna dla najuboższych kobiet w Senegalu.
-        Prowadzimy wiele działań na całym świecie. Nie byłoby to możliwe bez Twojej wpłaty. Razem budujemy pomoc.</p>
+                <p>Dziękujemy za Twoją wpłatę! Twoja darowizna to realna pomoc dla kobiet i dzieci, która pomoże zmienić
+                 ich życie na lepsze. Prowadzimy wiele działań na całym świecie. Nie byłoby to możliwe bez Twojego
+                  wsparcia. Razem budujemy pomoc! 
+                </p>
                 <p>Dziękujemy!</p>
                 <p>Zespół Polskiej Misji Medycznej</p>
         ".$additives)->send();
