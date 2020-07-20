@@ -9,6 +9,7 @@ use PayPalCheckoutSdk\Core\PayPalHttpClient;
 use PayPalCheckoutSdk\Core\ProductionEnvironment;
 use PayPalCheckoutSdk\Core\SandboxEnvironment;
 use PayPalCheckoutSdk\Orders\OrdersCreateRequest;
+use PayPalCheckoutSdk\Orders\OrdersCaptureRequest;
 use PayPalCheckoutSdk\Core\AccessTokenRequest;
 use PayPalHttp\HttpClient;
 use pleodigital\pmmpayments\Pmmpayments;
@@ -390,7 +391,27 @@ class Payments extends Component
         }
         $payment->save();
         $this->sendEmail($payment->email);
-        return $payment->email;
+
+        $clientId = Craft::$app->config->general->paypalId;
+        $clientSecret = Craft::$app->config->general->paypalSecret;
+        $env;
+        if (Craft::$app->config->general->paypalSandbox) {
+            $env = new SandBoxEnvironment($clientId, $clientSecret);
+        } else {
+            $env = new ProductionEnvironment($clientId, $clientSecret);
+        }
+        $client = new PayPalHttpClient($env);
+        $request = new OrdersCaptureRequest($json->resource->id);
+        $request->prefer('return=representation');
+        try {
+            $response = $client->execute($request);
+        }catch (HttpException $ex) {
+            return $ex->getMessage();
+        }
+
+        return $response;
+
+        // return $payment->email;
     }
 
     public function checkPaypalSubStatus($request) {
