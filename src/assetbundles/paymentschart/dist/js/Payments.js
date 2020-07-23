@@ -19,6 +19,7 @@ var pmmChart = {
         // console.log(totals);
         // totals = JSON.parse(totals);
         // console.log(totals);
+        console.log(totals);
         var ctx = $( "#canvas-stats" );
         var data = [];
         totals.forEach(function (monthData) {

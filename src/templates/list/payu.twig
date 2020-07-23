@@ -9,9 +9,10 @@
 {% set sortBy = craft.app.request.getQueryParam('sortBy') ? craft.app.request.getQueryParam('sortBy') : 'dateCreated' %}
 {% set sortOrder = craft.app.request.getQueryParam('sortOrder') ? craft.app.request.getQueryParam('sortOrder') : 'DESC' %}
 {% set projectFilter = craft.app.request.getQueryParam('projectFilter') ? craft.app.request.getQueryParam('projectFilter') : null %}
-{% set yearFilter = craft.app.request.getQueryParam('yearFilter') ? craft.app.request.getQueryParam('yearFilter') : null %}
-{% set monthFilter = craft.app.request.getQueryParam('monthFilter') ? craft.app.request.getQueryParam('monthFilter') : null %}
-{% set list = craft.payments.getPayUPayments(page, sortBy, sortOrder, projectFilter, yearFilter, monthFilter) %}
+{# {% set yearFilter = craft.app.request.getQueryParam('yearFilter') ? craft.app.request.getQueryParam('yearFilter') : null %}
+{% set monthFilter = craft.app.request.getQueryParam('monthFilter') ? craft.app.request.getQueryParam('monthFilter') : null %} #}
+{% set startRangeFilter = craft.app.request.getQueryParam('startRangeFilter') ? craft.app.request.getQueryParam('startRangeFilter') : null %}
+{% set endRangeFilter = craft.app.request.getQueryParam('endRangeFilter') ? craft.app.request.getQueryParam('endRangeFilter') : null %}
+{% set list = craft.payments.getPayUPayments(page, sortBy, sortOrder, projectFilter, startRangeFilter, endRangeFilter) %}
 
 {% include "pmm-payments/list/_table" %}
-

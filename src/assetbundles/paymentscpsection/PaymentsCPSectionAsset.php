@@ -54,10 +54,14 @@ class PaymentsCPSectionAsset extends AssetBundle
         // when this asset bundle is registered
         $this->js = [
             'js/Payments.js',
+            'https://cdn.jsdelivr.net/jquery/latest/jquery.min.js',
+            'https://cdn.jsdelivr.net/momentjs/latest/moment.min.js',
+            'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js'
         ];
 
         $this->css = [
             'css/Payments.css',
+            'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css'
         ];
 
         parent::init();

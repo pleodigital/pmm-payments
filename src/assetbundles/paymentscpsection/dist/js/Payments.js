@@ -14,8 +14,8 @@ var pmmPayments = {
     sortBy: null,
     sortOrder: null,
     projectFilter: null,
-    yearFilter: null,
-    monthFilter: null,
+    startRangeFilter: null,
+    endRangeFilter: null,
     subNav: '#nav-pmm-payments .subnav a',
 
 
@@ -29,13 +29,63 @@ var pmmPayments = {
         $('.content-pane').on('click', '#nav-pmm-payments .subnav a', this.onRefreshEntries);
         $('.content-pane').on('click', '.page-link.load-entries', this.onRefreshEntries);
         $($(pmmPayments.subNav)[2]).click(this.onStats);
+
+        var start = moment().subtract(29, 'days');
+        var end = moment();
+        $('#datepicker').daterangepicker({
+            opens: "left",
+            "locale": {
+                "format": "MM/DD/YYYY",
+                "separator": " - ",
+                "applyLabel": "Apply",
+                "cancelLabel": "Cancel",
+                "fromLabel": "From",
+                "toLabel": "To",
+                "customRangeLabel": "Custom",
+                "weekLabel": "W",
+                "daysOfWeek": [
+                    "Pon",
+                    "Wt",
+                    "Śr",
+                    "Czw",
+                    "Pt",
+                    "Sb",
+                    "Ndz"
+                ],
+                "monthNames": [
+                    "Styczeń",
+                    "Luty",
+                    "Marzec",
+                    "Kwiecień",
+                    "Maj",
+                    "Czerwiec",
+                    "Lipiec",
+                    "Sierpień",
+                    "Wrzesień",
+                    "Październik",
+                    "Listopad",
+                    "Grudzień"
+                ],
+                "firstDay": 0
+            },
+        }, (start, end) => {this.onRangeChange(start, end)});
+        $('.daterangepicker .drp-calendar').css("max-width", "none");
+        $(".daterangepicker").css("background-color", "#e4edf6");
+
         $('body').on('click', 'ul.sort-attributes li a', this.onSetSortBy);
         $('body').on('click', 'ul.sort-directions li a', this.onSetSortOrder);
         $('body').on('click', 'ul.project-filters li a', (e) => this.onSetFilter(e, "p"));
-        $('body').on('click', 'ul.year-filters li a', (e) => this.onSetFilter(e, "y"));
-        $('body').on('click', 'ul.month-filters li a', (e) => this.onSetFilter(e, "m"));
         $('body').on('click', 'div.clear-filters', this.onClearFilters);
         // $('body').on('click', 'ul.sort-attributes li a', this.onSetSortBy);
+    },
+
+    onRangeChange: function(start, end) {
+        console.log(start.format("YYYY-MM-DD") + " - " + end.format("YYYY-MM-DD"));
+        $("#datepicker").html(start.format("YYYY-MM-DD") + " - " + end.format("YYYY-MM-DD"));
+        this.onSetFilter({
+            start: start.format("YYYY-MM-DD"),
+            end: end.format("YYYY-MM-DD")
+        }, "r");
     },
 
     onStats: function(event) {
@@ -86,23 +136,20 @@ var pmmPayments = {
     },
 
     onSetFilter: function(event, type) {
-        event.preventDefault();
-        if (type === "y") {
-            pmmPayments.yearFilter = $(event.target).data('year-filter');
-            $('.year-filter-name').text($(event.target).text())
-            $('ul.year-filters li a.sel').not(this).removeClass('sel');
+        if (type === "r") {
+            pmmPayments.startRangeFilter = event.start;
+            pmmPayments.endRangeFilter = event.end;
+            console.log(pmmPayments);
+        } else {
+            event.preventDefault();
+            $(event.target).addClass('sel');
         }
+
         if (type === "p") {
             pmmPayments.projectFilter = $(event.target).data('project-filter');
             $('.project-filter-name').text($(event.target).text())
-            $('ul.project-filters li a.sel').not(this).removeClass('sel');
+            $('ul.project-filters li a.sel').not($(event.target)).removeClass('sel');
         }
-        if (type === "m") {
-            pmmPayments.monthFilter = $(event.target).data('month-filter');
-            $('.month-filter-name').text($(event.target).text())
-            $('ul.month-filters li a.sel').not(this).removeClass('sel');
-        }
-        $(event.target).addClass('sel');
         pmmPayments.loadEntries();
     },
 
@@ -114,11 +161,9 @@ var pmmPayments = {
 
     clearFilters: function() {
         pmmPayments.projectFilter = null;
-        pmmPayments.yearFilter = null;
-        pmmPayments.monthFilter = null;
-        $('.month-filter-name').text("Filtruj po miesiącach");
-        $('.year-filter-name').text("Filtruj po latach");
+        pmmPayments.rangeFilter = null;
         $('.project-filter-name').text("Filtruj po projektach");
+        $('.range-filter-name').text("Filtruj po dacie");
         $('ul.filters li a.sel').not(this).removeClass('sel');
     },
 
@@ -159,12 +204,13 @@ var pmmPayments = {
         if(this.projectFilter) {
             url += 'projectFilter=' + this.projectFilter + '&';
         }
-        if(this.yearFilter) {
-            url += 'yearFilter=' + this.yearFilter + '&';
+        if(this.startRangeFilter) {
+            url += 'startRangeFilter=' + this.startRangeFilter + '&';
         }
-        if(this.monthFilter) {
-            url += 'monthFilter=' + this.monthFilter + '&';
+        if(this.endRangeFilter) {
+            url += 'endRangeFilter=' + this.endRangeFilter + '&';
         }
+        console.log();
         console.log(url);
         $.get(url, function(html) {
             $('.content-pane .main .elements').html(html);

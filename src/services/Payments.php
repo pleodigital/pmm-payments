@@ -475,14 +475,26 @@ class Payments extends Component
         return json_decode($response,true)['access_token'];
     }
 
-    public function getAllMonthsTotal($projectFilter = "%", $yearFilter = "%", $monthFilter = "%") {
+    public function getAllMonthsTotal($projectFilter = "%", $startRangeFilter = "%", $endRangeFilter = "%") {
+        // $sql = "SELECT YEAR(dateCreated) as year,
+        //     MONTH(dateCreated) as month,
+        //     SUM(amount) AS total
+        //     FROM pmmpayments_payment
+        //     WHERE (project LIKE '%$projectFilter%') AND (MONTH(dateCreated) LIKE '%$monthFilter%') AND (YEAR(dateCreated) LIKE '%$yearFilter%') AND status='COMPLETED'
+        //     GROUP BY YEAR(dateCreated), MONTH(dateCreated)
+        // ";
         $sql = "SELECT YEAR(dateCreated) as year,
             MONTH(dateCreated) as month,
             SUM(amount) AS total
             FROM pmmpayments_payment
-            WHERE (project LIKE '%$projectFilter%') AND (MONTH(dateCreated) LIKE '%$monthFilter%') AND (YEAR(dateCreated) LIKE '%$yearFilter%') AND status='COMPLETED'
-            GROUP BY YEAR(dateCreated), MONTH(dateCreated)
+            WHERE (project LIKE '%$projectFilter%')
         ";
+
+        if ($startRangeFilter && $endRangeFilter) {
+            $sql .= " AND (dateCreated BETWEEN '$startRangeFilter' AND '$endRangeFilter')";
+        }
+        $sql .= " AND status='COMPLETED'
+        GROUP BY YEAR(dateCreated), MONTH(dateCreated)";
 
         $activeDataProvider = new SqlDataProvider([
             'sql' => $sql,
@@ -495,16 +507,16 @@ class Payments extends Component
         return $totals;
     }
 
-    public function getPayUPayments($page, $sordBy, $sortOrder, $projectFilter, $yearFilter, $monthFilter)
+    public function getPayUPayments($page, $sordBy, $sortOrder, $projectFilter, $startRangeFilter, $endRangeFilter)
     {
         $provider = 1;
-        return $this -> getEntries($provider, $page, $sordBy, $sortOrder, $projectFilter, $yearFilter, $monthFilter);
+        return $this -> getEntries($provider, $page, $sordBy, $sortOrder, $projectFilter, $startRangeFilter, $endRangeFilter);
     }
 
     public function getPayPalPayments($page, $sordBy, $sortOrder, $projectFilter, $yearFilter, $monthFilter)
     {
         $provider = 2;
-        return $this -> getEntries($provider, $page, $sordBy, $sortOrder, $projectFilter, $yearFilter, $monthFilter);
+        return $this -> getEntries($provider, $page, $sordBy, $sortOrder, $projectFilter, $range);
     }
 
     public function getSortOptions()
@@ -573,7 +585,7 @@ class Payments extends Component
         return $provider;
     }
 
-    private function getEntries($provider, $page, $sortBy = 'dateCreated', $sortOrder = 'DESC', $projectFilter = null, $yearFilter = null, $monthFilter = null)
+    private function getEntries($provider, $page, $sortBy = 'dateCreated', $sortOrder = 'DESC', $projectFilter = null, $startRangeFilter = null, $endRangeFilter = null)
     {
         $firstDayOfThisMonth = date('Y-m-01 00:00:00');
         $lastDayOfThisMonth = date('Y-m-t 12:59:59');
@@ -584,19 +596,20 @@ class Payments extends Component
         $entriesTotal = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "status='COMPLETED'"]) -> asArray() -> all();
 //        $query = Payment :: find() -> where(['provider' => $provider]);
         $filters = ['and', "status = 'COMPLETED'"];
+        $query;
 
 
         if ($projectFilter) {
             array_push($filters, "project = '$projectFilter'");
         }
-        if ($yearFilter) {
-            array_push($filters, "YEAR(dateCreated) = '$yearFilter'");
-        }
-        if ($monthFilter) {
-            array_push($filters, "MONTH(dateCreated) = '$monthFilter'");
+        if ($startRangeFilter && $endRangeFilter) {
+            $start = date($startRangeFilter);
+            $end = date("Y-m-d", strtotime($endRangeFilter.' +1 day'));
+            $query = Payment::find()->where(['provider' => $provider])->andWhere($filters)->andWhere(["between", "dateCreated", $start, $end]);
+        } else {
+            $query = Payment::find()->where(['provider' => $provider])->andWhere($filters);
         }
 
-        $query = Payment::find()->where(['provider' => $provider])->andWhere($filters);
 
 
         $activeDataProvider = new ActiveDataProvider([

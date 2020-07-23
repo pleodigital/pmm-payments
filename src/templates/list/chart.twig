@@ -6,10 +6,10 @@
 {% set baseEntriesUrl = cpUrl(baseUrl ~ providerName) %}
 
 {% set projectFilter = craft.app.request.getQueryParam('projectFilter') ? craft.app.request.getQueryParam('projectFilter') : null %}
-{% set yearFilter = craft.app.request.getQueryParam('yearFilter') ? craft.app.request.getQueryParam('yearFilter') : null %}
-{% set monthFilter = craft.app.request.getQueryParam('monthFilter') ? craft.app.request.getQueryParam('monthFilter') : null %}
+{% set startRangeFilter = craft.app.request.getQueryParam('startRangeFilter') ? craft.app.request.getQueryParam('startRangeFilter') : null %}
+{% set endRangeFilter = craft.app.request.getQueryParam('endRangeFilter') ? craft.app.request.getQueryParam('endRangeFilter') : null %}
 
-{% set totals = craft.payments.getAllMonthsTotal(projectFilter, yearFilter, monthFilter) %}
+{% set totals = craft.payments.getAllMonthsTotal(projectFilter, startRangeFilter, endRangeFilter) %}
 
 {% macro jsVar(variable, jsVariableName) %}
     var {{jsVariableName}} = {{variable|json_encode|raw}};
