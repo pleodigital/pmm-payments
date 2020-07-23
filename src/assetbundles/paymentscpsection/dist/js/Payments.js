@@ -37,11 +37,11 @@ var pmmPayments = {
             "locale": {
                 "format": "MM/DD/YYYY",
                 "separator": " - ",
-                "applyLabel": "Apply",
-                "cancelLabel": "Cancel",
-                "fromLabel": "From",
-                "toLabel": "To",
-                "customRangeLabel": "Custom",
+                "applyLabel": "Potwierdź",
+                "cancelLabel": "Anuluj",
+                "fromLabel": "Od",
+                "toLabel": "Do",
+                "customRangeLabel": "Własne",
                 "weekLabel": "W",
                 "daysOfWeek": [
                     "Pon",
@@ -161,7 +161,8 @@ var pmmPayments = {
 
     clearFilters: function() {
         pmmPayments.projectFilter = null;
-        pmmPayments.rangeFilter = null;
+        pmmPayments.startRangeFilter = null;
+        pmmPayments.endRangeFilter = null;
         $('.project-filter-name').text("Filtruj po projektach");
         $('.range-filter-name').text("Filtruj po dacie");
         $('ul.filters li a.sel').not(this).removeClass('sel');
