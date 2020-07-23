@@ -513,10 +513,10 @@ class Payments extends Component
         return $this -> getEntries($provider, $page, $sordBy, $sortOrder, $projectFilter, $startRangeFilter, $endRangeFilter);
     }
 
-    public function getPayPalPayments($page, $sordBy, $sortOrder, $projectFilter, $yearFilter, $monthFilter)
+    public function getPayPalPayments($page, $sordBy, $sortOrder, $projectFilter, $startRangeFilter, $endRangeFilter)
     {
         $provider = 2;
-        return $this -> getEntries($provider, $page, $sordBy, $sortOrder, $projectFilter, $range);
+        return $this -> getEntries($provider, $page, $sordBy, $sortOrder, $startRangeFilter, $endRangeFilter);
     }
 
     public function getSortOptions()
