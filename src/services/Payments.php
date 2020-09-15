@@ -279,6 +279,8 @@ class Payments extends Component
 
         $order['payMethods']['payMethod']['value'] = $token;
         $order['payMethods']['payMethod']['type'] = $tokenType; 
+        
+        // TODO: Wysyłka maila o pomyślnej płatności. Siema, wykonaliśmy wpłate na jakis tam projekt cos tam cos tam. 
   
         $responseObj = OpenPayU_Order :: create($order);
         $response = $responseObj -> getResponse();   
@@ -289,7 +291,7 @@ class Payments extends Component
         }
     }
 
-    // 1. To uruchamiać co miesiąc
+    // TODO: Cron co 0.5h 
     public function payuMonthlyPayment() {
         $this -> setPayUAuths(null);
         $recurringPayments = Recurring :: find() -> where(['provider' => 1]) -> andWhere(['and', ["active" => true]]) -> asArray() -> all();
@@ -313,6 +315,9 @@ class Payments extends Component
             curl_setopt($ch, CURLOPT_HTTPHEADER, array(
               "Content-Type: application/x-www-form-urlencoded"
             ));
+
+            // TODO: Jeśli minęło 30 dni od lastNotification w tabeli recurring to wysyłamy maila z linkiem do anulowania subskrybcji. 
+            // Siema, za 7 dni przeprowadzimy płątnośc za tyle i tyle szekli na to i to, jesli chcesz anulować to kliknij se tu.  
             
             $response = curl_exec($ch);
             curl_close($ch);
