@@ -16,7 +16,7 @@ use Craft;
 use craft\db\ActiveRecord;
 
 /**
- * Payment Record
+ * Recurring Record
  *
  * ActiveRecord is the base class for classes representing relational data in terms of objects.
  *
@@ -31,7 +31,7 @@ use craft\db\ActiveRecord;
  * @package   Pmmpayments
  * @since     1.0.0
  */
-class Payment extends ActiveRecord
+class Recurring extends ActiveRecord
 { 
     // Public Static Methods
     // =========================================================================
@@ -50,7 +50,7 @@ class Payment extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%pmmpayments_payment}}';
+        return '{{%pmmpayments_recurring}}';
     }
 
     protected function defineAttributes()
@@ -79,19 +79,51 @@ class Payment extends ActiveRecord
             'amount' => [
                 'type' => AttributeType::Money,
                 'required' => true
-            ],
-            'isRecurring' => [
-                'type' => AttributeType::Boolean,
-                'required' => true
-            ],
-            'recurringId' => [
-                'type' => AttributeType::Integer,
-                'required' => false
-            ],
+            ],  
             'provider' => [
                 'type' => AttributeType::Integer,
                 'required' => true
-            ]
+            ],
+            'currency' => [
+                'type' => AttributeType::String,
+                'required' => true
+            ],
+            'language' => [
+                'type' => AttributeType::String,
+                'required' => true
+            ],
+            'cancelHash' => [
+                'type' => AttributeType::String,
+                'required' => true
+            ],
+            'active' => [
+                'type' => AttributeType::String,
+                'required' => true
+            ],
+            'lastNotification' => [
+                'type' => AttributeType::DateTime,
+                'required' => false
+            ],
+            'lastPayment' => [
+                'type' => AttributeType::DateTime,
+                'required' => false
+            ],
+            'payUMerchantPosId' => [
+                'type' => AttributeType::String,
+                'required' => false
+            ],        
+            'payUScondaryKey' => [
+                'type' => AttributeType::String,
+                'required' => false
+            ],   
+            'dateCreated' => [
+                'type' => AttributeType::DateTime,
+                'required' => false
+            ],
+            'dateUpdated' => [
+                'type' => AttributeType::DateTime,
+                'required' => true
+            ], 
         ];
     }
 }

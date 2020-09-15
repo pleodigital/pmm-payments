@@ -47,7 +47,7 @@ class PaymentsController extends Controller
      *         The actions must be in 'kebab-case'
      * @access protected
      */
-    protected $allowAnonymous = ['index', 'check-payu-status', 'check-paypal-status', 'paypal-activate-sub', 'check-paypal-sub', 'paypal-monthly-payment', 'ed2a2a984c0289c0a1ddb44029121aae', 'cancel-subscription'];
+    protected $allowAnonymous = ['index', 'payu-end', 'check-payu-status', 'check-paypal-status', 'paypal-activate-sub', 'check-paypal-sub', 'paypal-monthly-payment', 'ed2a2a984c0289c0a1ddb44029121aae', 'ed2a2a984c0289c0a1ddb44029121abcd', 'cancel-subscription'];
 
     // Public Methods
     // =========================================================================
@@ -60,7 +60,6 @@ class PaymentsController extends Controller
      */
     public function actionIndex()
     {
-
         try {
             $request = Craft :: $app -> getRequest();
             $response = Pmmpayments :: $plugin -> payments -> processRequestData( $request );
@@ -69,7 +68,6 @@ class PaymentsController extends Controller
         } catch (Exception $e) {
             return 'Saving data went wrong.';
         }
-
     }
 
     public function actionExportCsv()
@@ -79,6 +77,18 @@ class PaymentsController extends Controller
             $response = Pmmpayments :: $plugin -> payments -> exportCsv($request -> getQueryParam('provider'));
         } catch (Exception $e) {
             return 'Exporting went wrong.';
+        }
+    }
+
+    public function actionPayuEnd()
+    {   
+        try {
+            $request = Craft :: $app -> getRequest();
+            $response = Pmmpayments :: $plugin -> payments -> payuPaymentRecursive( $request );
+
+            return $this -> asJson($response);
+        } catch (Exception $e) {
+            return 'Saving data went wrong.';
         }
     }
 
@@ -146,7 +156,16 @@ class PaymentsController extends Controller
     {
         try {
             $response = Pmmpayments :: $plugin -> payments -> checkMonthlyPayments();
+            return $this -> asJson($response);
+        } catch (Exception $e) {
+            return 'Exporting went wrong.';
+        }
+    }
 
+    public function actionEd2a2a984c0289c0a1ddb44029121abcd()
+    {
+        try {
+            $response = Pmmpayments :: $plugin -> payments -> payuMonthlyPayment();
             return $this -> asJson($response);
         } catch (Exception $e) {
             return 'Exporting went wrong.';

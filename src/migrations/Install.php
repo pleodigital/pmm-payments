@@ -96,33 +96,72 @@ class Install extends Migration
     protected function createTables()
     {
         $tablesCreated = false;
+        $tablesRecurringCreated = false;
 
-    // pmmpayments_payment table
+        // pmmpayments_payment table
         $tableSchema = Craft::$app->db->schema->getTableSchema('{{%pmmpayments_payment}}');
         if ($tableSchema === null) {
-            $tablesCreated = true;
-            $timeZone = Craft::$app -> getTimeZone();
+            $tablesCreated = true; 
             $this->createTable(
                 '{{%pmmpayments_payment}}',
                 [
-                    'id' => $this -> primaryKey(),
-                    'dateCreated' => $this -> dateTime() -> setTimeZone(new DateTimeZone($timeZone)) -> notNull(),
-                    'dateUpdated' => $this -> dateTime() -> setTimeZone(new DateTimeZone($timeZone))-> notNull(),
-                    'uid' => $this -> uid(),
-                // Custom columns in the table 
+                    'id' => $this -> primaryKey(), 
+
                     'project' => $this -> string(500) -> notNull() -> defaultValue(''),
                     'title' => $this -> string(500) -> notNull() -> defaultValue(''),
                     'firstName' => $this -> string(255) -> notNull() -> defaultValue(''),
                     'lastName' => $this -> string(255) -> notNull() -> defaultValue(''),
                     'email' => $this -> string(255) -> notNull() -> defaultValue(''),
                     'amount' => $this -> money(8,2) -> notNull() -> defaultValue(null),
-                    'isRecurring' => $this -> integer(1) -> notNull() -> defaultValue(0), 
-                    'provider' => $this -> integer(4) -> notNull() -> defaultValue(0)
+                    'currency' => $this -> string(3) -> defaultValue(null),
+                    'language' => $this -> string(2) -> defaultValue(null),
+                    'isRecurring' => $this -> boolean() -> defaultValue(false), 
+                    'recurringId' => $this -> integer(7) -> defaultValue(null), 
+                    'provider' => $this -> integer(4) -> notNull() -> defaultValue(0),
+                    'status' => $this -> string(255) -> notNull() -> defaultValue(''),
+                    
+                    'dateCreated' => $this -> dateTime() -> notNull(),
+                    'dateUpdated' => $this -> dateTime() -> notNull(),
+                    'uid' => $this -> uid()
                 ]
             );
         }
 
-        return $tablesCreated;
+        // pmmpayments_recurring table
+        $tableRecurringSchema = Craft :: $app -> db -> schema -> getTableSchema('{{%pmmpayments_recurring}}');
+        if ($tableRecurringSchema === null) {
+            $tablesRecurringCreated = true; 
+            $this->createTable(
+                '{{%pmmpayments_recurring}}',
+                [
+                    'id' => $this -> primaryKey(), 
+
+                    'project' => $this -> string(500) -> notNull() -> defaultValue(''),
+                    'title' => $this -> string(500) -> notNull() -> defaultValue(''),
+                    'firstName' => $this -> string(255) -> notNull() -> defaultValue(''),
+                    'lastName' => $this -> string(255) -> notNull() -> defaultValue(''),
+                    'email' => $this -> string(255) -> notNull() -> defaultValue(''),
+                    'amount' => $this -> money(8,2) -> defaultValue(null), 
+                    'provider' => $this -> integer(4) -> notNull() -> defaultValue(0),
+                    'currency' => $this -> string(3) -> defaultValue(null),
+                    'language' => $this -> string(2) -> defaultValue(null),
+                    'cancelHash' => $this -> string(255) -> defaultValue(null),
+                    'active' => $this -> boolean() -> defaultValue(true),
+                    
+                    'lastNotification' => $this -> dateTime() -> defaultValue(null),
+                    'lastPayment' => $this -> dateTime() -> defaultValue(null),
+
+                    'merchantPosId' => $this -> string(255) -> defaultValue(null),
+                    'merchantSecondaryKey' => $this -> string(255) -> defaultValue(null),
+                    
+                    'dateCreated' => $this -> dateTime() -> notNull(),
+                    'dateUpdated' => $this -> dateTime() -> notNull(),
+                    'uid' => $this -> uid()
+                ]
+            );
+        }
+
+        return $tablesCreated && $tablesRecurringCreated;
     }
 
     /**
@@ -187,5 +226,6 @@ class Install extends Migration
     {
     // pmmpayments_payment table
         $this->dropTableIfExists('{{%pmmpayments_payment}}');
+        $this->dropTableIfExists('{{%pmmpayments_recurring}}');
     }
 }

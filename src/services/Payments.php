@@ -5,6 +5,8 @@ namespace pleodigital\pmmpayments\services;
 use craft\records\Entry;
 use OpenPayU_Configuration;
 use OpenPayU_Order;
+use OpenPayU_Retrieve;
+use OauthGrantType;
 use PayPalCheckoutSdk\Core\PayPalHttpClient;
 use PayPalCheckoutSdk\Core\ProductionEnvironment;
 use PayPalCheckoutSdk\Core\SandboxEnvironment;
@@ -15,8 +17,7 @@ use PayPalHttp\HttpClient;
 use pleodigital\pmmpayments\Pmmpayments;
 use DateTime;
 
-use Craft;
-//use craft\elements\Entry;
+use Craft; 
 use Yii;
 use yii\data\ActiveDataProvider;
 use League\Csv\Writer;
@@ -24,11 +25,13 @@ use SplTempFileObject;
 use craft\base\Component;
 use craft\helpers\Json;
 use pleodigital\pmmpayments\records\Payment;
+use pleodigital\pmmpayments\records\Recurring;
 use yii\data\SqlDataProvider;
 
 class Payments extends Component
 {
     const ENTRIES_ON_PAGE= 50;
+    CONST ENVIRONMENT = 'secure';
 
     private function sendEmail($email, $additives = '') {
         Craft::$app->getMailer()->compose()->setTo($email)->setSubject('Polska Misja Medyczna')->setHtmlBody("
@@ -85,10 +88,6 @@ class Payments extends Component
 
 //        return $totals;
         return $result;
-    }
-
-    private function payuMonthlyPayment() {
-        return null;
     }
 
     public function paypalMonthlyPayment($field) {
@@ -166,65 +165,175 @@ class Payments extends Component
 
         header('Location: '.Craft::$app->config->general->cancelSubscriptionRedirect);
         return $response;
-    }
+    } 
 
-    private function payuPayment($request, $payment) {
-        $entry;
-        $idWplaty;
+    private function setPayUAuths($craftId = null)
+    { 
+        if($craftId) {
+            $craftId = parseInt($craftId);
+        }
 
-        if($request->getBodyParam('craftId') == 0) {
-            $tempEntry = \craft\elements\Entry::find()->section('moduly')->slug('moduł-wpłaty')->one()->modulWplatyPmm;
-
+        if(!$craftId) {
+            $tempEntry = \craft\elements\Entry :: find() -> section('moduly') -> slug('moduł-wpłaty') -> one() -> modulWplatyPmm;
             foreach ($tempEntry as $subentry) {
-                if ($subentry->payuDrugiKlucz) {
+                if ($subentry -> payuDrugiKlucz) {
                     $entry = $subentry;
                 }
             }
-            OpenPayU_Configuration::setEnvironment('secure');
-            OpenPayU_Configuration::setMerchantPosId($entry->identyfikatorWplaty);
-            OpenPayU_Configuration::setSignatureKey($entry->payuDrugiKlucz);
-            OpenPayU_Configuration::setOauthClientId($entry->identyfikatorWplaty);
-            OpenPayU_Configuration::setOauthClientSecret($entry->payuOAuth);
+            $merchantPosId = $entry -> identyfikatorWplaty;
+            $signatureKey = $entry -> payuDrugiKlucz;
+            $oAuthClientId = $entry -> identyfikatorWplaty;
+            $oAuthClientSecret = $entry -> payuOAuth; 
+
+            // TODO: Do usunięcia
+            $merchantPosId = 2516447;
+            $signatureKey = 'df356e27714e16f2616c1fe9889ac6b7';
+            $oAuthClientId = 2516447;
+            $oAuthClientSecret = '6d064970ada5084fd4bf1db51e8ff4bf';
         } else {
-            $entry = \craft\elements\Entry::find()->id($request->getBodyParam('craftId'))->one();
-            OpenPayU_Configuration::setEnvironment('secure');
-            OpenPayU_Configuration::setMerchantPosId($entry->wplatyIdentyfikatorWplaty);
-            OpenPayU_Configuration::setSignatureKey($entry->wplatyPayuDrugiKlucz);
-            OpenPayU_Configuration::setOauthClientId($entry->wplatyIdentyfikatorWplaty);
-            OpenPayU_Configuration::setOauthClientSecret($entry->wplatyPayuOAuth);
-        }
+            $entry = \craft\elements\Entry :: find() -> id($craftId) -> one(); 
+            $merchantPosId = $entry -> wplatyIdentyfikatorWplaty;
+            $signatureKey = $entry -> wplatyPayuDrugiKlucz;
+            $oAuthClientId = $entry -> wplatyIdentyfikatorWplaty;
+            $oAuthClientSecret = $entry -> wplatyPayuOAuth;
+        } 
+        
+        OpenPayU_Configuration :: setEnvironment(self :: ENVIRONMENT); 
+        OpenPayU_Configuration :: setMerchantPosId($merchantPosId);
+        OpenPayU_Configuration :: setSignatureKey($signatureKey);
+        OpenPayU_Configuration :: setOauthClientId($oAuthClientId);
+        OpenPayU_Configuration :: setOauthClientSecret($oAuthClientSecret);
+    }
 
-        $order['continueUrl'] = Craft::$app->config->general->payUPaymentThanksPage;
-        $order['notifyUrl'] = Craft::$app->config->general->paymentPayuStatus;
+    public function payuPaymentRecursive($request) { 
+        $this -> setPayUAuths($request -> getBodyParam('craftId'));
+        $recurringPayment = new Recurring(); 
+        $recurringPayment -> setAttribute('project', $request -> getBodyParam('project'));
+        $recurringPayment -> setAttribute('title', $request -> getBodyParam('title'));
+        $recurringPayment -> setAttribute('firstName', $request -> getBodyParam('firstName'));
+        $recurringPayment -> setAttribute('lastName', $request -> getBodyParam('lastName'));
+        $recurringPayment -> setAttribute('email', $request -> getBodyParam('email'));
+        $recurringPayment -> setAttribute('amount', (int)$request -> getBodyParam('amount') / 100);
+        $recurringPayment -> setAttribute('provider', 1);
+        $recurringPayment -> setAttribute('lastNotification', date('Y-m-d h:s:00', strtotime("-1 week")));
+        $recurringPayment -> setAttribute('lastPayment', date('Y-m-d h:s:00'));
+        $recurringPayment -> setAttribute('currency', $request -> getBodyParam('currency'));
+        $recurringPayment -> setAttribute('language', $request -> getBodyParam('language'));
+        $recurringPayment -> setAttribute('merchantPosId', OpenPayU_Configuration :: getMerchantPosId());
+        $recurringPayment -> setAttribute('merchantSecondaryKey', OpenPayU_Configuration :: getSignatureKey());
+        $recurringPayment -> setAttribute('active', true);
+
+        if(!$recurringPayment -> validate()) {
+            return [
+                'error' => 'Nie udało się zapisać płatności. Niepoprawne dane.',
+            ];
+        } else {
+            $recurringPayment -> save();
+        } 
+
+        $token = $request -> getBodyParam('value');
+        $tokenType = $request -> getBodyParam('type');
+
+        $this -> makePayURecursivePayment(true, $recurringPayment, $token, $tokenType);
+    }
+
+    private function makePayURecursivePayment($isFirst = false, $recurringPayment, $token, $tokenType) {
+        $payment = new Payment();
+        $payment -> setAttribute('project', $recurringPayment -> project);
+        $payment -> setAttribute('title', $recurringPayment -> title);
+        $payment -> setAttribute('firstName', $recurringPayment -> firstName);
+        $payment -> setAttribute('lastName', $recurringPayment -> lastName);
+        $payment -> setAttribute('email', $recurringPayment -> email);
+        $payment -> setAttribute('amount', $recurringPayment -> amount);
+        $payment -> setAttribute('currency', $recurringPayment -> currency);
+        $payment -> setAttribute('language', $recurringPayment -> language);
+        $payment -> setAttribute('isRecurring', true);
+        $payment -> setAttribute('recurringId', $recurringPayment -> id);
+        $payment -> setAttribute('provider', 1);
+        $payment -> setAttribute('status', "WAITING");
+        $payment -> save(); 
+
+        $order['continueUrl'] = Craft :: $app -> config -> general -> payUPaymentThanksPage;
+        $order['notifyUrl'] = Craft :: $app -> config -> general -> paymentPayuStatus;
         $order['customerIp'] = $_SERVER['REMOTE_ADDR'];
-        $order['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
-        $order['description'] = $request -> getBodyParam('project');
-        $order['currencyCode'] = $request -> getBodyParam('currencyCode');
-        $order['totalAmount'] = $request -> getBodyParam('totalAmount')*100;
-        $order['extOrderId'] = $payment->uid;
+        $order['merchantPosId'] = OpenPayU_Configuration :: getMerchantPosId();
+        $order['description'] = $payment -> title;
+        $order['currencyCode'] = $payment -> currency;
+        $order['totalAmount'] = $payment -> amount * 100;  
+        $order['extOrderId'] = $payment -> uid;  
+        $order['cardOnFile'] = $isFirst ? "FIRST" : "STANDARD_MERCHANT";
 
-        $order['products'][0]['name'] = $request -> getBodyParam('project');
-        $order['products'][0]['unitPrice'] = $request -> getBodyParam('totalAmount')*100;
+        // Czy trzeba te pola? Nie wiem, ale co szkodzi wysłać Polakowi?
+        //$order['email'] = $payment -> email;
+        //$order['extCustomerId'] = $recurringPayment -> uid;
+
+        $order['products'][0]['name'] = $payment -> project;
+        $order['products'][0]['unitPrice'] = $payment -> amount * 100;
         $order['products'][0]['quantity'] = 1;
 
-        $order['buyer']['email'] = $request -> getBodyParam('email');
-        $order['buyer']['firstName'] = $request -> getBodyParam('firstName');
-        $order['buyer']['lastName'] = $request -> getBodyParam('lastName');
-        $order['buyer']['language'] = $request -> getBodyParam('language');
+        $order['buyer']['extCustomerId'] = $recurringPayment -> uid;
+        $order['buyer']['email'] = $payment -> email;
+        $order['buyer']['firstName'] = $payment -> firstName;
+        $order['buyer']['lastName'] = $payment -> lastName;
+        $order['buyer']['language'] = $payment -> language; 
 
-        if ($payment->isRecurring) {
-            $order['recurring'] = "FIRST";
-            $command = Yii::$app->db->createCommand(
-                "INSERT INTO pmmpayments_tokens(`token`,`project`,`title`,`provider`,`currencyCode`,`totalAmount`,`email`, `language`, `firstName`, `lastName`)VALUES ('"
-                .$payment->uid."', '" .$request -> getBodyParam("project")."', '".$request -> getBodyParam("title")."', '".$request -> getBodyParam("provider")."','"
-                .$request -> getBodyParam("currencyCode")."', '".$request -> getBodyParam("totalAmount")."', '".$request -> getBodyParam("email")."','"
-                .$request -> getBodyParam("language")."', '".$request -> getBodyParam("firstName")."', '".$request -> getBodyParam("lastName")."')");
-            $command->execute();
+        $order['payMethods']['payMethod']['value'] = $token;
+        $order['payMethods']['payMethod']['type'] = $tokenType; 
+  
+        $responseObj = OpenPayU_Order :: create($order);
+        $response = $responseObj -> getResponse();   
+        if(isset($response -> redirectUri)) {
+            Craft :: $app -> getResponse() -> redirect($response -> redirectUri);
+        } else {
+            Craft :: $app -> getResponse() -> redirect(Craft :: $app -> config -> general -> payUPaymentThanksPage);
         }
+    }
 
-        $response = OpenPayU_Order::create($order);
+    // 1. To uruchamiać co miesiąc
+    public function payuMonthlyPayment() {
+        $this -> setPayUAuths(null);
+        $recurringPayments = Recurring :: find() -> where(['provider' => 1]) -> andWhere(['and', ["active" => true]]) -> asArray() -> all();
+        foreach($recurringPayments as $recurringPayment) { 
+            $endpointDomain = self :: ENVIRONMENT === 'secure' ? 'secure' : 'secure.snd';  
+            // 1. GET TOKEN
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, "https://" . $endpointDomain . ".payu.com/pl/standard/user/oauth/authorize");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+            curl_setopt($ch, CURLOPT_HEADER, FALSE);
+            curl_setopt($ch, CURLOPT_POST, TRUE);
+            
+            $oAuthClientId = OpenPayU_Configuration :: getOauthClientId();
+            $oAuthClientSecret = OpenPayU_Configuration :: getOauthClientSecret(); 
+            $email = $recurringPayment['email'];
+            $customerId = $recurringPayment['uid']; 
+ 
+            $authString = "grant_type=trusted_merchant&client_id=$oAuthClientId&client_secret=$oAuthClientSecret&email=$email&ext_customer_id=$customerId";   
 
-        return $response;
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $authString);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+              "Content-Type: application/x-www-form-urlencoded"
+            ));
+            
+            $response = curl_exec($ch);
+            curl_close($ch);
+            $responseObj = json_decode($response);           
+
+            $accessToken = $responseObj -> access_token; 
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, "https://" . $endpointDomain . ".payu.com/api/v2_1/paymethods/");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+            curl_setopt($ch, CURLOPT_HEADER, FALSE);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: Bearer $accessToken"));
+            $response = curl_exec($ch);
+            curl_close($ch);
+
+            // Tu po pobraniu tokenów będzie płatność cykliczna. 
+
+            echo "https://" . $endpointDomain . ".payu.com/api/v2_1/paymethods/";
+ 
+            echo '<pre>'. print_r(json_decode($response), true) .'</pre>';
+        }
     }
 
     private function paypalPayment($request, $payment) {
@@ -243,11 +352,10 @@ class Payments extends Component
             $order->prefer('return=representation');
             $order->body = [
                 'intent' => 'CAPTURE',
-                'application_context' =>
-                    array(
-                        'return_url' => Craft::$app->config->general->payUPaymentThanksPage,
-                        'cancel_url' => Craft::$app->config->general->payUPaymentThanksPage
-                    ),
+                'application_context' => array(
+                    'return_url' => Craft :: $app -> config -> general -> payUPaymentThanksPage,
+                    'cancel_url' => Craft :: $app -> config -> general -> payUPaymentThanksPage
+                ),
                 'purchase_units' =>
                     array(
                         0 =>
@@ -337,6 +445,7 @@ class Payments extends Component
         $payment -> setAttribute('isRecurring', $request -> getBodyParam('isRecurring') == 'true');
         $payment -> setAttribute('provider', (int)$request -> getBodyParam('provider'));
         $payment -> setAttribute('status', "STARTED");
+
         if( !$payment -> validate() ) {
             return [
                 'error' => 'Nie udało się zapisać płatności. Niepoprawne dane.',
@@ -351,7 +460,7 @@ class Payments extends Component
             return $response->getResponse()->redirectUri;
         } else {
             $response = $this->paypalPayment($request, $payment);
-
+            
             return $response;
         }
 
