@@ -1,4 +1,5 @@
  <div class="tableview">
+     {{ craft.config }}
     {% if list and list.entries | length %}
         <div class="tablecontent">
             <table class="data fullwidth nowrap">
@@ -14,9 +15,13 @@
                         <tr style="white-space: normal;">
                             {% for column in list.columns %}
                                 {% if column.key == 'dateCreated' %}
-                                <td style="max-width: 200px;">{{ row[column.key] | date_modify("+2 hours") | date("d/m/Y H:i:s")  }}</td>
+                                    <td style="max-width: 200px;">{{ row[column.key] | date_modify("+2 hours") | date("d/m/Y H:i:s")  }}</td>
+                                {% elseif column.key == 'isRecurring' %}
+                                    <td style="max-width: 200px;">{{ row[column.key] == 1 ? "Cykliczna" : "Jednorazowa" }}</td>
+                                {% elseif column.key == 'id' %}
+                                    <td style="max-width: 200px;"><button data-id="{{ row[column.key] }}" class="btn submit">Anuluj</button></td>
                                 {% else %}
-                                <td style="max-width: 200px;">{{ row[column.key] }}</td>
+                                    <td style="max-width: 200px;">{{ row[column.key] }}</td>
                                 {% endif %}
                             {% endfor %}
                         </tr>
@@ -41,11 +46,13 @@
     </div>
 
     <hr>
-    
+
+     {% if not list.isRecurring %}
     <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat z wybranymi filtrami:</b> {{ list.sumFilter | number_format(2) }} PLN</p>
     <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat wyświetlanych na stronie:</b> {{ list.sum | number_format(2) }} PLN</p>
     <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat w tym miesiącu:</b> {{ list.sumMonth | number_format(2) }} PLN</p>
     <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat w tym roku:</b> {{ list.sumYear | number_format(2) }} PLN</p>
     <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat:</b> {{ list.sumTotal | number_format(2) }} PLN</p>
+     {% endif %}
 
 </div>

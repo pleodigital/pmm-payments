@@ -12,6 +12,8 @@ namespace pleodigital\pmmpayments;
 
 use pleodigital\pmmpayments\services\Payments as PaymentsService;
 use pleodigital\pmmpayments\models\Settings;
+use pleodigital\pmmpayments\services\Paypal;
+use pleodigital\pmmpayments\services\Payu;
 use pleodigital\pmmpayments\widgets\Payments as PaymentsWidget;
 
 use Craft;
@@ -91,8 +93,12 @@ class Pmmpayments extends Plugin
         if (Craft::$app instanceof ConsoleApplication) {
             $this->controllerNamespace = 'pleodigital\pmmpayments\console\controllers';
         }
-        
 
+        $this->setComponents([
+            "payments" => \pleodigital\pmmpayments\services\Payments::class,
+            "payu" => \pleodigital\pmmpayments\services\Payu::class,
+            "paypal" => \pleodigital\pmmpayments\services\Paypal::class
+        ]);
 
         // Register our site routes
         // Event::on(
@@ -110,6 +116,8 @@ class Pmmpayments extends Plugin
                 /** @var CraftVariable $variable */
                 $variable = $event -> sender;
                 $variable->set('payments', PaymentsService::class);
+                $variable->set('payu', Payu::class);
+                $variable->set('paypal', Paypal::class);
             }
         );
 
@@ -122,6 +130,8 @@ class Pmmpayments extends Plugin
                 $event->rules['pmmpayments/payu'] = 'pmm-payments/list/payu';
                 $event->rules['pmmpayments/paypal'] = 'pmm-payments/list/paypal';
                 $event->rules['pmmpayments/chart'] = 'pmm-payments/list/chart';
+                $event->rules['pmmpayments/mailing'] = 'pmm-payments/list/mailing';
+                $event->rules['pmmpayments/recurring'] = 'pmm-payments/list/recurring';
             }
         );
 
@@ -193,6 +203,16 @@ class Pmmpayments extends Plugin
             'url' => 'pmm-payments/list/chart'
         ];
 
+        $parent['subnav']['mailing'] = [
+            'label' => 'Mailing',
+            'url' => 'pmm-payments/list/mailing'
+        ];
+
+        $parent['subnav']['recurring'] = [
+            'label' => 'Cykliczne',
+            'url' => 'pmm-payments/list/recurring'
+        ];
+
         return $parent;
     }
 
@@ -215,7 +235,7 @@ class Pmmpayments extends Plugin
      *
      * @return string The rendered settings HTML
      */
-    protected function settingsHtml(): string
+    public function settingsHtml(): string
     {
         return Craft::$app->view->renderTemplate(
             'pmm-payments/settings', [

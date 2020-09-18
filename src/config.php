@@ -27,5 +27,6 @@ return [
 
     // This controls blah blah blah
     "someAttribute" => true,
-
+    "notifyEmail" => "",
+    "paymentEmail" => ""
 ];

@@ -40,6 +40,8 @@ class Settings extends Model
      * @var string
      */
     public $someAttribute = 'Some Default';
+    public $notifyEmail = 'Treść maila.';
+    public $paymentEmail = "Treść maila.";
 
     // Public Methods
     // =========================================================================
@@ -59,6 +61,9 @@ class Settings extends Model
         return [
             ['someAttribute', 'string'],
             ['someAttribute', 'default', 'value' => 'Some Default'],
+            ['notifyEmail', 'default', 'value' => 'Treść maila.'],
+            ['paymentEmail', 'default', 'value' => 'Treść maila.'],
+
         ];
     }
 }

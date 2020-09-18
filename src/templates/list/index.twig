@@ -7,40 +7,40 @@
 {% set yearFilters = craft.payments.getYearFilterOptions() %}
 {% set monthFilters = craft.payments.getMonthFilterOptions() %}
     <div id="toolbar" class="flex flex-nowrap">
-        {# <div>
-            <div class="btn menubtn statusmenubtn" tabindex="0" role="combobox" aria-owns="menu.Garnish685367686" aria-haspopup="true" aria-expanded="false">
-                <span class="status"></span>Wszystkie
-            </div>
-            
-            {{ forms.selectField({
-                name: 'defaultPageLength',
-                class: 'sortmenubtn',
-                options: sortOptions,
-            }) }}
-        </div>
-        <div class="flex-grow texticon search icon clearable">
-            <input type="text" class="text fullwidth" autocomplete="off" placeholder="Szukaj">
-            <div class="clear hidden" title="Wyczyść"></div>
-        </div> #}
-        <div>
-            <div class="btn menubtn sortmenubtn" data-icon="desc">Data płatności</div> 
-            <div class="menu">
-                <ul class="padded sort-attributes" role="listbox" aria-hidden="true">
-                    {% for sortOption in sortOptions %}
-                        <li>
-                            <a class="{{ sortOption.selected is defined and sortOption.selected ? 'sel' }}" data-sort-by="{{sortOption.value}}" role="option" tabindex="-1" id="null-option-{{ loop.index0 }}">    
-                                {{ sortOption.label }}
-                            </a>
-                        </li>
-                    {% endfor %}                  
-                </ul>
-                <hr>
-                <ul class="padded sort-directions" role="listbox" id="menu.Garnish740013346" aria-hidden="true">
-                    <li><a data-sort-order="ASC" class="" role="option" tabindex="-1" id="null-option-2">Rosnąco</a></li>
-                    <li><a data-sort-order="DESC" role="option" tabindex="-1" id="null-option-3" class="sel">Malejąco</a></li>
-                </ul>
-            </div>
-        </div>
+{#         <div>#}
+{#            <div class="btn menubtn statusmenubtn" tabindex="0" role="combobox" aria-owns="menu.Garnish685367686" aria-haspopup="true" aria-expanded="false">#}
+{#                <span class="status"></span>Wszystkie#}
+{#            </div>#}
+
+{#            {{ forms.selectField({#}
+{#                name: 'defaultPageLength',#}
+{#                class: 'sortmenubtn',#}
+{#                options: sortOptions,#}
+{#            }) }}#}
+{#        </div>#}
+{#        <div class="flex-grow texticon search icon clearable">#}
+{#            <input type="text" class="text fullwidth" autocomplete="off" placeholder="Szukaj">#}
+{#            <div class="clear hidden" title="Wyczyść"></div>#}
+{#        </div>#}
+{#        <div>#}
+{#            <div class="btn menubtn sortmenubtn" data-icon="desc">Data płatności</div>#}
+{#            <div class="menu">#}
+{#                <ul class="padded sort-attributes" role="listbox" aria-hidden="true">#}
+{#                    {% for sortOption in sortOptions %}#}
+{#                        <li>#}
+{#                            <a class="{{ sortOption.selected is defined and sortOption.selected ? 'sel' }}" data-sort-by="{{sortOption.value}}" role="option" tabindex="-1" id="null-option-{{ loop.index0 }}">#}
+{#                                {{ sortOption.label }}#}
+{#                            </a>#}
+{#                        </li>#}
+{#                    {% endfor %}#}
+{#                </ul>#}
+{#                <hr>#}
+{#                <ul class="padded sort-directions" role="listbox" id="menu.Garnish740013346" aria-hidden="true">#}
+{#                    <li><a data-sort-order="ASC" class="" role="option" tabindex="-1" id="null-option-2">Rosnąco</a></li>#}
+{#                    <li><a data-sort-order="DESC" role="option" tabindex="-1" id="null-option-3" class="sel">Malejąco</a></li>#}
+{#                </ul>#}
+{#            </div>#}
+{#        </div>#}
         <div>
             <div class="btn menubtn project-filter-name">Filtruj po projektach</div>
             <div class="menu">
@@ -56,38 +56,55 @@
             </div>
         </div>
         <div>
-            <div class="btn menubtn range-filter-name" id="datepicker">Filtruj po dacie</div>
-        </div>
-        {# <div>
-            <div class="btn menubtn year-filter-name">Filtruj po latach</div>
+            <div class="btn menubtn payment-type-filter-name">Filtruj po rodzaju płatności</div>
             <div class="menu">
-                <ul class="padded filters year-filters" role="listbox" aria-hidden="true">
-                    {% for yearFilter in yearFilters %}
-                        <li>
-                            <a role="option" data-year-filter="{{ yearFilter.year }}" tabindex="-1" id="null-option-{{ loop.index0 }}">
-                                {{ yearFilter.year }}
-                            </a>
-                        </li>
-                    {% endfor %}
+                <ul class="padded filters payment-type-filters" role="listbox" aria-hidden="true">
+                    <li>
+                        <a role="option" data-payment-type-filter="0" tabindex="-1">
+                            Płatność jednorazowa
+                        </a>
+                    </li>
+                    <li>
+                        <a role="option" data-payment-type-filter="1" tabindex="-1">
+                            Płatność cykliczna
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
         <div>
-            <div class="btn menubtn month-filter-name">Filtruj po miesiącach</div>
-            <div class="menu">
-                <ul class="padded filters month-filters" role="listbox" aria-hidden="true">
-                    {% for monthFilter in monthFilters %}
-                        <li>
-                            <a role="option" data-month-filter="{{ loop.index }}" tabindex="-1" id="null-option-{{ loop.index0 }}">
-                                {{ monthFilter }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div> #}
+            <div class="btn menubtn range-filter-name" id="datepicker">Filtruj po dacie</div>
+        </div>
+{#         <div>#}
+{#            <div class="btn menubtn year-filter-name">Filtruj po latach</div>#}
+{#            <div class="menu">#}
+{#                <ul class="padded filters year-filters" role="listbox" aria-hidden="true">#}
+{#                    {% for yearFilter in yearFilters %}#}
+{#                        <li>#}
+{#                            <a role="option" data-year-filter="{{ yearFilter.year }}" tabindex="-1" id="null-option-{{ loop.index0 }}">#}
+{#                                {{ yearFilter.year }}#}
+{#                            </a>#}
+{#                        </li>#}
+{#                    {% endfor %}#}
+{#                </ul>#}
+{#            </div>#}
+{#        </div>#}
+{#        <div>#}
+{#            <div class="btn menubtn month-filter-name">Filtruj po miesiącach</div>#}
+{#            <div class="menu">#}
+{#                <ul class="padded filters month-filters" role="listbox" aria-hidden="true">#}
+{#                    {% for monthFilter in monthFilters %}#}
+{#                        <li>#}
+{#                            <a role="option" data-month-filter="{{ loop.index }}" tabindex="-1" id="null-option-{{ loop.index0 }}">#}
+{#                                {{ monthFilter }}#}
+{#                            </a>#}
+{#                        </li>#}
+{#                    {% endfor %}#}
+{#                </ul>#}
+{#            </div>#}
+{#        </div>#}
         <div class="btn clear-filters">Usuń filtry</div>
     </div>
 
-    
+
 {% endblock %}

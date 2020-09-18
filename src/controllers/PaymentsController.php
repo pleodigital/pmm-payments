@@ -15,6 +15,9 @@ use pleodigital\pmmpayments\Pmmpayments;
 use Craft;
 use craft\web\Controller;
 use craft\helpers\Json;
+use pleodigital\pmmpayments\services\Payments;
+use pleodigital\pmmpayments\services\Payu;
+use yii\db\Exception;
 
 /**
  * Payments Controller
@@ -47,7 +50,7 @@ class PaymentsController extends Controller
      *         The actions must be in 'kebab-case'
      * @access protected
      */
-    protected $allowAnonymous = ['index', 'payu-end', 'check-payu-status', 'check-paypal-status', 'paypal-activate-sub', 'check-paypal-sub', 'paypal-monthly-payment', 'ed2a2a984c0289c0a1ddb44029121aae', 'ed2a2a984c0289c0a1ddb44029121abcd', 'cancel-subscription'];
+    protected $allowAnonymous = ['index', 'cancel-subscription'];
 
     // Public Methods
     // =========================================================================
@@ -63,10 +66,20 @@ class PaymentsController extends Controller
         try {
             $request = Craft :: $app -> getRequest();
             $response = Pmmpayments :: $plugin -> payments -> processRequestData( $request );
-
             return $this -> asJson($response);
         } catch (Exception $e) {
             return 'Saving data went wrong.';
+        }
+    }
+
+    public function actionCancelSubscription() {
+        try {
+            $request = Craft::$app->getRequest();
+            $response = Payments::instance()->sendEmail("hubertsosnicki2000@gmail.com", false, null, "Hubert");
+//            $response = Pmmpayments::$plugin->payments->cancelSubscription($request->get("id"));
+            return $this -> asJson($response);
+        } catch (Exception $e) {
+            return "Deleting data went wrong";
         }
     }
 
@@ -75,110 +88,6 @@ class PaymentsController extends Controller
         try {
             $request = Craft :: $app -> getRequest();
             $response = Pmmpayments :: $plugin -> payments -> exportCsv($request -> getQueryParam('provider'));
-        } catch (Exception $e) {
-            return 'Exporting went wrong.';
-        }
-    }
-
-    public function actionPayuEnd()
-    {   
-        try {
-            $request = Craft :: $app -> getRequest();
-            $response = Pmmpayments :: $plugin -> payments -> payuPaymentRecursive( $request );
-
-            return $this -> asJson($response);
-        } catch (Exception $e) {
-            return 'Saving data went wrong.';
-        }
-    }
-
-    public function actionCheckPayuStatus()
-    {
-        try {
-            $request = Craft :: $app -> getRequest();
-            $response = Pmmpayments :: $plugin -> payments -> checkPayuStatus( $request );
-
-            return $this -> asJson($response);
-        } catch (Exception $e) {
-            return 'Exporting went wrong.';
-        }
-    }
-
-    public function actionCheckPaypalStatus()
-    {
-        try {
-            $request = Craft :: $app -> getRequest();
-            $response = Pmmpayments :: $plugin -> payments -> checkPaypalStatus( $request );
-
-            return $this -> asJson($response);
-        } catch (Exception $e) {
-            return 'Exporting went wrong.';
-        }
-    }
-
-    public function actionCheckPaypalSub()
-    {
-        try {
-            $request = Craft :: $app -> getRequest();
-            $response = Pmmpayments :: $plugin -> payments -> checkPaypalSubStatus( $request );
-
-            return $this -> asJson($response);
-        } catch (Exception $e) {
-            return 'Exporting went wrong.';
-        }
-    }
-
-    public function actionPaypalActivateSub()
-    {
-        try {
-            $request = Craft :: $app -> getRequest();
-            $response = Pmmpayments :: $plugin -> payments -> checkPaypalActivation( $request );
-
-            return $this -> asJson($response);
-        } catch (Exception $e) {
-            return 'Exporting went wrong.';
-        }
-    }
-
-//    public function actionPaypalMonthlyPayment()
-//    {
-//        try {
-//            $request = Craft :: $app -> getRequest();
-//            $response = Pmmpayments :: $plugin -> payments -> paypalMonthlyPayment( $request );
-//
-//            return $this -> asJson($response);
-//        } catch (Exception $e) {
-//            return 'Exporting went wrong.';
-//        }
-//    }
-
-    public function actionEd2a2a984c0289c0a1ddb44029121aae()
-    {
-        try {
-            $response = Pmmpayments :: $plugin -> payments -> checkMonthlyPayments();
-            return $this -> asJson($response);
-        } catch (Exception $e) {
-            return 'Exporting went wrong.';
-        }
-    }
-
-    public function actionEd2a2a984c0289c0a1ddb44029121abcd()
-    {
-        try {
-            $response = Pmmpayments :: $plugin -> payments -> payuMonthlyPayment();
-            return $this -> asJson($response);
-        } catch (Exception $e) {
-            return 'Exporting went wrong.';
-        }
-    }
-
-    public function actionCancelSubscription()
-    {
-        try {
-            $request = Craft :: $app -> getRequest();
-            $response = Pmmpayments :: $plugin -> payments -> cancelSubscription( $request );
-
-            return $this -> asJson($response);
         } catch (Exception $e) {
             return 'Exporting went wrong.';
         }

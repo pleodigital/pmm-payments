@@ -13,6 +13,7 @@
 {% set monthFilter = craft.app.request.getQueryParam('monthFilter') ? craft.app.request.getQueryParam('monthFilter') : null %} #}
 {% set startRangeFilter = craft.app.request.getQueryParam('startRangeFilter') ? craft.app.request.getQueryParam('startRangeFilter') : null %}
 {% set endRangeFilter = craft.app.request.getQueryParam('endRangeFilter') ? craft.app.request.getQueryParam('endRangeFilter') : null %}
-{% set list = craft.payments.getPayUPayments(page, sortBy, sortOrder, projectFilter, startRangeFilter, endRangeFilter) %}
-
+{% set paymentType = craft.app.request.getQueryParam('paymentType') ? craft.app.request.getQueryParam('paymentType') : null %}
+{% set list = craft.payments.getPayUPayments(page, sortBy, sortOrder, projectFilter, startRangeFilter, endRangeFilter, paymentType) %}
+{#{{ list }}#}
 {% include "pmm-payments/list/_table" %}

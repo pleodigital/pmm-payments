@@ -16,6 +16,7 @@ var pmmPayments = {
     projectFilter: null,
     startRangeFilter: null,
     endRangeFilter: null,
+    paymentTypeFilter: null,
     subNav: '#nav-pmm-payments .subnav a',
 
 
@@ -29,6 +30,8 @@ var pmmPayments = {
         $('.content-pane').on('click', '#nav-pmm-payments .subnav a', this.onRefreshEntries);
         $('.content-pane').on('click', '.page-link.load-entries', this.onRefreshEntries);
         $($(pmmPayments.subNav)[2]).click(this.onStats);
+        $($(pmmPayments.subNav)[4]).click(this.onRecurring);
+        $(".sub-cancel").click(this.onSubCancel);
 
         var start = moment().subtract(29, 'days');
         var end = moment();
@@ -75,9 +78,17 @@ var pmmPayments = {
         $('body').on('click', 'ul.sort-attributes li a', this.onSetSortBy);
         $('body').on('click', 'ul.sort-directions li a', this.onSetSortOrder);
         $('body').on('click', 'ul.project-filters li a', (e) => this.onSetFilter(e, "p"));
+        $('body').on('click', 'ul.payment-type-filters li a', (e) => this.onSetFilter(e, "pt"));
         $('body').on('click', 'div.clear-filters', this.onClearFilters);
         // $('body').on('click', 'ul.sort-attributes li a', this.onSetSortBy);
     },
+
+    // onEmailSettings: function() {
+    //     console.log("XD");
+    //     var notifyEmail = $("#notifyEmail").value();
+    //     var paymentEmail = $("#paymentEmail").value();
+    //     console.log(notifyEmail);
+    // },
 
     onRangeChange: function(start, end) {
         console.log(start.format("YYYY-MM-DD") + " - " + end.format("YYYY-MM-DD"));
@@ -86,6 +97,35 @@ var pmmPayments = {
             start: start.format("YYYY-MM-DD"),
             end: end.format("YYYY-MM-DD")
         }, "r");
+    },
+
+    onSubCancel: function(event) {
+        event.preventDefault();
+
+    },
+
+    onRecurring: function(event) {
+        event.preventDefault();
+        $(".payment-type-filter-name").hide();
+        pmmPayments.clearFilters();
+
+        // var element = $('.sidebar-pmmpayments a.sel');
+        // $('.content-pane .main .elements').addClass('busy');
+        // var url = $(element).attr('href') + '?';
+        // console.log(this.projectFilter, this.yearFilter, this.monthFilter);
+        // if(this.projectFilter) {
+        //     url += 'projectFilter=' + this.projectFilter + '&';
+        // }
+        // if(this.yearFilter) {
+        //     url += 'yearFilter=' + this.yearFilter + '&';
+        // }
+        // if(this.monthFilter) {
+        //     url += 'monthFilter=' + this.monthFilter + '&';
+        // }
+        // $.get(url, function(html) {
+        //     $('.content-pane .main .elements').html(html);
+        //     $('.content-pane .main .elements').removeClass('busy');
+        // })
     },
 
     onStats: function(event) {
@@ -150,6 +190,12 @@ var pmmPayments = {
             $('.project-filter-name').text($(event.target).text())
             $('ul.project-filters li a.sel').not($(event.target)).removeClass('sel');
         }
+        if (type === "pt") {
+            pmmPayments.paymentTypeFilter = $(event.target).data("payment-type-filter");
+            $('.payment-type-filter-name').text($(event.target).text())
+            $('ul.payment-type-filters li a.sel').not($(event.target)).removeClass('sel');
+
+        }
         pmmPayments.loadEntries();
     },
 
@@ -211,12 +257,22 @@ var pmmPayments = {
         if(this.endRangeFilter) {
             url += 'endRangeFilter=' + this.endRangeFilter + '&';
         }
+        if(this.paymentTypeFilter == 0 || this.paymentTypeFilter == 1) {
+            console.log("paymentType");
+            url += 'paymentType=' + this.paymentTypeFilter + '&';
+        }
         console.log();
         console.log(url);
         $.get(url, function(html) {
             $('.content-pane .main .elements').html(html);
             $('.content-pane .main .elements').removeClass('busy');
-        })      
+            if ($("#settings-notifyEmail").length) {
+                $("#toolbar").hide();
+            } else {
+                $("#toolbar").show();
+            }
+        });
+
     }
 }
 

@@ -17,10 +17,63 @@
 
 {% do view.registerAssetBundle("pleodigital\\pmmpayments\\assetbundles\\pmmpayments\\PmmpaymentsAsset") %}
 
-{{ forms.textField({
-    label: 'Some Field',
-    instructions: 'Enter some setting here.',
-    id: 'someAttribute',
-    name: 'someAttribute',
-    value: settings['someAttribute']})
-}}
+
+{#{% block content %}#}
+{#    {{ actionInput('plugins/save-plugin-settings') }}#}
+{#    {{ hiddenInput('pluginHandle', "pmm-payments") }}#}
+{#    {{ redirectInput('settings') }}#}
+
+{#    {% namespace 'settings' %}#}
+
+{#        {{ forms.textAreaField({#}
+{#            label: 'Powiadomienie o nadchodzącej płatności',#}
+{#            instructions: 'Wprowadź treść maila.',#}
+{#            id: 'notifyEmail',#}
+{#            name: 'notifyEmail',#}
+{#            value: settings['notifyEmail']})#}
+{#        }}#}
+
+{#        {{ forms.textAreaField({#}
+{#            label: 'Powiadomienie o zrealizowanej płatności',#}
+{#            instructions: 'Wprowadź treść maila.',#}
+{#            id: 'paymentEmail',#}
+{#            name: 'paymentEmail',#}
+{#            value: settings['paymentEmail']})#}
+{#        }}#}
+
+{#        <button class="btn submit save-email-settings" value="{{ 'Save'|t('app') }}">Zapisz</button>#}
+{#    {% endnamespace %}#}
+{#{% endblock %}#}
+{% set title = "Pmm payments" %}
+{% set docTitle = title ~ ' - ' ~ "Plugins"|t('app') %}
+
+
+{% block content %}
+    <form id="main-form" method="post" accept-charset="UTF-8" novalidate data-saveshortcut data-confirm-unload>
+        {{ actionInput('plugins/save-plugin-settings') }}
+        {{ hiddenInput('pluginHandle', "pmm-payments") }}
+        {{ redirectInput('pmm-payments') }}
+
+        {% namespace 'settings' %}
+
+            {{ forms.textAreaField({
+                label: 'Powiadomienie o nadchodzącej płatności',
+                instructions: 'Wprowadź treść maila.',
+                id: 'notifyEmail',
+                name: 'notifyEmail',
+                value: settings['notifyEmail']})
+            }}
+
+            {{ forms.textAreaField({
+                label: 'Powiadomienie o zrealizowanej płatności',
+                instructions: 'Wprowadź treść maila.',
+                id: 'paymentEmail',
+                name: 'paymentEmail',
+                value: settings['paymentEmail']})
+            }}
+
+            <input type="submit" class="btn submit" value="{{ 'Zapisz'|t('app') }}">
+        {% endnamespace %}
+    </form>
+
+{% endblock %}

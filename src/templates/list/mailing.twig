@@ -1,0 +1,19 @@
+{% import "_includes/forms" as forms %}
+
+{% do view.registerAssetBundle("pleodigital\\pmmpayments\\assetbundles\\pmmpayments\\PmmpaymentsAsset") %}
+
+{% set pluginName = 'pmm-payments' %}
+{% set providerName = 'mailing' %}
+
+{% set baseUrl = pluginName ~ '/list/' %}
+{#{% set settings = craft.app.settingsHtml() %}#}
+{% set settings = craft.payments.getSettingsHtml() %}
+{{ settings | raw }}
+{#{% include "pmm-payments/settings" %}#}
+
+
+{#{% js %}#}
+{#    $(".btn").click(() => {#}
+{#    console.log("xd");#}
+{#    });#}
+{#{% endjs %}#}
