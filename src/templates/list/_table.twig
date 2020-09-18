@@ -1,5 +1,4 @@
  <div class="tableview">
-     {{ craft.config }}
     {% if list and list.entries | length %}
         <div class="tablecontent">
             <table class="data fullwidth nowrap">
@@ -19,7 +18,7 @@
                                 {% elseif column.key == 'isRecurring' %}
                                     <td style="max-width: 200px;">{{ row[column.key] == 1 ? "Cykliczna" : "Jednorazowa" }}</td>
                                 {% elseif column.key == 'id' %}
-                                    <td style="max-width: 200px;"><button data-id="{{ row[column.key] }}" class="btn submit">Anuluj</button></td>
+                                    <td style="max-width: 200px;"><button data-href="{{ craft.config.cancelSubscription }}" data-id="{{ row[column.key] }}" class="btn submit sub-cancel">Anuluj</button></td>
                                 {% else %}
                                     <td style="max-width: 200px;">{{ row[column.key] }}</td>
                                 {% endif %}

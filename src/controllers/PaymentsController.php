@@ -75,8 +75,7 @@ class PaymentsController extends Controller
     public function actionCancelSubscription() {
         try {
             $request = Craft::$app->getRequest();
-            $response = Payments::instance()->sendEmail("hubertsosnicki2000@gmail.com", false, null, "Hubert");
-//            $response = Pmmpayments::$plugin->payments->cancelSubscription($request->get("id"));
+            $response = Pmmpayments::$plugin->payments->cancelSubscription($request->get("id"));
             return $this -> asJson($response);
         } catch (Exception $e) {
             return "Deleting data went wrong";

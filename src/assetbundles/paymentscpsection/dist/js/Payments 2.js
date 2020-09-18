@@ -31,6 +31,7 @@ var pmmPayments = {
         $('.content-pane').on('click', '.page-link.load-entries', this.onRefreshEntries);
         $($(pmmPayments.subNav)[2]).click(this.onStats);
         $($(pmmPayments.subNav)[4]).click(this.onRecurring);
+        $(".sub-cancel").click(this.onSubCancel);
 
         var start = moment().subtract(29, 'days');
         var end = moment();
@@ -99,10 +100,8 @@ var pmmPayments = {
     },
 
     onSubCancel: function(event) {
-        $.get(`${event.target.dataset.href}?id=${event.target.dataset.id}`, function(res) {
-            console.log(res);
-            pmmPayments.loadEntries();
-        });
+        event.preventDefault();
+
     },
 
     onRecurring: function(event) {
@@ -271,11 +270,6 @@ var pmmPayments = {
                 $("#toolbar").hide();
             } else {
                 $("#toolbar").show();
-            }
-            console.log("CANCEL", $(".sub-cancel"));
-            if ($(".sub-cancel").length) {
-                console.log("true");
-                $(".sub-cancel").click(pmmPayments.onSubCancel);
             }
         });
 

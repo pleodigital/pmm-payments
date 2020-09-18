@@ -7,6 +7,7 @@ namespace pleodigital\pmmpayments\controllers;
 use Craft;
 use craft\web\Controller;
 use pleodigital\pmmpayments\Pmmpayments;
+use pleodigital\pmmpayments\services\Payments;
 
 class PayuController extends Controller
 {
@@ -15,9 +16,12 @@ class PayuController extends Controller
     public function actionEnd()
     {
         try {
+            $fp = fopen('git.txt', 'w');
+            fwrite($fp, "0");
+            fclose($fp);
             $request = Craft :: $app -> getRequest();
             $response = Pmmpayments :: $plugin -> payu -> paymentRecursive( $request );
-
+            echo json_encode($request->bodyParams);
             return $this -> asJson($response);
         } catch (Exception $e) {
             return 'Saving data went wrong.';

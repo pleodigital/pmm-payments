@@ -211,18 +211,22 @@ class Paypal extends Component
     }
 
     public function payment($request) {
+        $fp = fopen('res.txt', 'w');
+        fwrite($fp, json_encode($request->bodyParams));
+        fclose($fp);
+
         $payment = new Payment();
         $payment -> setAttribute('project', $request -> getBodyParam("project"));
         $payment -> setAttribute('title', $request -> getBodyParam("title"));
         $payment -> setAttribute('firstName', $request -> getBodyParam("firstName"));
         $payment -> setAttribute('lastName', $request -> getBodyParam("lastName"));
         $payment -> setAttribute('email', $request -> getBodyParam("email"));
-        $payment -> setAttribute('amount', $request -> getBodyParam("amount"));
-        $payment -> setAttribute('currency', $request -> getBodyParam("currency"));
+        $payment -> setAttribute('amount', $request -> getBodyParam("totalAmount"));
+        $payment -> setAttribute('currency', $request -> getBodyParam("currencyCode"));
         $payment -> setAttribute('language', $request -> getBodyParam("language"));
         $payment -> setAttribute('isRecurring', true);
         $payment -> setAttribute('recurringId', $request -> getBodyParam("id"));
-        $payment -> setAttribute('provider', 1);
+        $payment -> setAttribute('provider', 2);
         $payment -> setAttribute('status', "WAITING");
         $payment -> save();
 
@@ -234,6 +238,7 @@ class Paypal extends Component
         } else {
             $clientId = Craft::$app->config->general->paypalId;
             $clientSecret = Craft::$app->config->general->paypalSecret;
+
             $env = new ProductionEnvironment($clientId, $clientSecret);
             $client = new PayPalHttpClient($env);
 

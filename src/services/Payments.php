@@ -53,7 +53,7 @@ class Payments extends Component
             Craft::$app->plugins->getPlugin("pmm-payments")->getSettings()["paymentEmail"];
         $search = "/[{]{2}(imie)[}]{2}/";
         $text = preg_replace($search,$name,$text);
-        $search = "/[{]{2}(project)[}]{2}/";
+        $search = "/[{]{2}(projekt)[}]{2}/";
         $text = preg_replace($search,$project,$text);
         Craft::$app
             ->getMailer()
@@ -115,9 +115,9 @@ class Payments extends Component
 //        }
 
         if ($request->getBodyParam('provider') == '1') {
-            $response = Payu::instance()->makePayment($request);
+            $response = Payu::instance()->makePayment(false, $request);
 
-            return $response->getResponse()->redirectUri;
+            return $response;
         } else {
             $response = Paypal::instance()->payment($request);
             
@@ -324,9 +324,11 @@ class Payments extends Component
 
         if ($recursivePayment->provider == 1) {
             $token = Payu::instance()->getCardToken($recursivePayment);
-
             // TODO: request na usuwanie otrzymanego tokenu z payu
+            return $token;
         }
+
+        $recursivePayment->save();
 
         return $recursivePayment;
     }
