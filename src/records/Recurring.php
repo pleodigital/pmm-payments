@@ -100,6 +100,10 @@ class Recurring extends ActiveRecord
                 'type' => AttributeType::String,
                 'required' => true
             ],
+            'craftId' => [
+                'type' => AttributeType::String,
+                'required' => true
+            ],
             'lastNotification' => [
                 'type' => AttributeType::DateTime,
                 'required' => false

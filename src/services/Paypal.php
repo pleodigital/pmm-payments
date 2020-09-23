@@ -238,9 +238,12 @@ class Paypal extends Component
         } else {
             $clientId = Craft::$app->config->general->paypalId;
             $clientSecret = Craft::$app->config->general->paypalSecret;
+            // echo print_r(Craft::$app->config->general,true);
+            
 
             $env = new ProductionEnvironment($clientId, $clientSecret);
             $client = new PayPalHttpClient($env);
+
 
             $order = new OrdersCreateRequest();
             $order->prefer('return=representation');

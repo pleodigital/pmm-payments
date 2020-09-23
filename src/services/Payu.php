@@ -1,8 +1,6 @@
 <?php
 
-
 namespace pleodigital\pmmpayments\services;
-
 
 use OpenPayU_Configuration;
 use OpenPayU_Order;
@@ -16,11 +14,14 @@ class Payu extends Component
     CONST ENVIRONMENT = 'secure';
     const ENTRIES_ON_PAGE= 50;
 
-    private function setAuths($craftId = null)
+    private function setAuths($craftId = null, $isRecurring = false)
     {
         if($craftId) {
-            $craftId = parseInt($craftId);
+            $craftId = strval($craftId);
         }
+        $fp = fopen('res.txt', 'w');
+        fwrite($fp, json_encode($craftId));
+        fclose($fp);
 
         if(!$craftId) {
             $tempEntry = \craft\elements\Entry :: find() -> section('moduly') -> slug('moduł-wpłaty') -> one() -> modulWplatyPmm;
@@ -29,23 +30,31 @@ class Payu extends Component
                     $entry = $subentry;
                 }
             }
-            $merchantPosId = $entry -> identyfikatorWplaty;
-            $signatureKey = $entry -> payuDrugiKlucz;
-            $oAuthClientId = $entry -> identyfikatorWplaty;
-            $oAuthClientSecret = $entry -> payuOAuth;
-
-            // TODO: Do usunięcia
-//            $merchantPosId = 300746;
-//            $signatureKey = 'b6ca15b0d1020e8094d9b5f8d163db54';
-//            $oAuthClientId = 300746;
-//            $oAuthClientSecret = '2ee86a66e5d97e3fadc400c9f19b065d';
-//            $oAuthClientSecret = 'eb66cced5ebf45d5776de92896aabbda';
+            if ($isRecurring) {
+                $merchantPosId = $entry -> cyklicznePayuIdentyfikator;
+                $signatureKey = $entry -> cyklicznePayuDrugiKlucz;
+                $oAuthClientId = $entry -> cyklicznePayuIdentyfikator;
+                $oAuthClientSecret = $entry -> cyklicznePayuOAuth;
+            } else {
+                $merchantPosId = $entry -> identyfikatorWplaty;
+                $signatureKey = $entry -> payuDrugiKlucz;
+                $oAuthClientId = $entry -> identyfikatorWplaty;
+                $oAuthClientSecret = $entry -> payuOAuth;
+            }
         } else {
             $entry = \craft\elements\Entry :: find() -> id($craftId) -> one();
-            $merchantPosId = $entry -> wplatyIdentyfikatorWplaty;
-            $signatureKey = $entry -> wplatyPayuDrugiKlucz;
-            $oAuthClientId = $entry -> wplatyIdentyfikatorWplaty;
-            $oAuthClientSecret = $entry -> wplatyPayuOAuth;
+            
+            if ($isRecurring) {
+                $merchantPosId = $entry -> cyklicznePayuIdentyfikator ? $entry -> cyklicznePayuIdentyfikator : $entry -> wplatyPayuCykliczneAutoryzacja;
+                $signatureKey = $entry -> cyklicznePayuDrugiKlucz ? $entry -> cyklicznePayuDrugiKlucz : $entry -> wplatyPayuCykliczneDrugiKlucz;
+                $oAuthClientId = $entry -> cyklicznePayuIdentyfikator ? $entry -> cyklicznePayuIdentyfikator : $entry -> wplatyPayuCykliczneAutoryzacja;
+                $oAuthClientSecret = $entry -> cyklicznePayuOAuth ? $entry -> cyklicznePayuOAuth : $entry -> wplatyPayuCykliczneOAuth;
+            } else {
+                $merchantPosId = $entry -> identyfikatorWplaty;
+                $signatureKey = $entry -> payuDrugiKlucz;
+                $oAuthClientId = $entry -> identyfikatorWplaty;
+                $oAuthClientSecret = $entry -> payuOAuth;
+            }
         }
 
         OpenPayU_Configuration :: setEnvironment(self :: ENVIRONMENT);
@@ -53,17 +62,14 @@ class Payu extends Component
         OpenPayU_Configuration :: setSignatureKey($signatureKey);
         OpenPayU_Configuration :: setOauthClientId($oAuthClientId);
         OpenPayU_Configuration :: setOauthClientSecret($oAuthClientSecret);
+        // OpenPayU_Configuration :: setMerchantPosId("2516446");
+        // OpenPayU_Configuration :: setSignatureKey("223ea885c439668a370208385a4cec5f");
+        // OpenPayU_Configuration :: setOauthClientId("2516446");
+        // OpenPayU_Configuration :: setOauthClientSecret("a67abe8410ea9f34affdd5568b261ea2");
     }
 
     public function paymentRecursive($request) {
-//        $fp = fopen('results.json', 'w');
-//        fwrite($fp, json_encode($request->bodyParams));
-//        fclose($fp);
-        Payments::instance()->sendEmail(
-            "hubertsosnicki2000@pleodigital.com",
-            false,
-            "");
-        $this -> setAuths($request -> getBodyParam('craftId'));
+        $this -> setAuths($request -> getBodyParam('craftId'), true);
         $recurringPayment = new Recurring();
         $recurringPayment -> setAttribute('project', $request -> getBodyParam('project'));
         $recurringPayment -> setAttribute('title', $request -> getBodyParam('title'));
@@ -79,8 +85,9 @@ class Payu extends Component
         $recurringPayment -> setAttribute('merchantPosId', OpenPayU_Configuration :: getMerchantPosId());
         $recurringPayment -> setAttribute('merchantSecondaryKey', OpenPayU_Configuration :: getSignatureKey());
         $recurringPayment -> setAttribute('active', true);
-        $fp = fopen('git.txt', 'w');
-        fwrite($fp, json_encode($request));
+        $recurringPayment -> setAttribute('craftId', $request->getBodyParam("craftId"));
+        $fp = fopen('tworzenie_karty.txt', 'w');
+        fwrite($fp, "<pre>".print_r($request->bodyParams, true)."</pre>");
         fclose($fp);
 
         if(!$recurringPayment -> validate()) {
@@ -95,15 +102,18 @@ class Payu extends Component
         $tokenType = $request -> getBodyParam('type');
 
 
-        $this -> makePayment(true, $request, true, $token, $tokenType, true);
+        $this -> makePayment(true, $recurringPayment, true, $token, $tokenType, false);
     }
 
 
     public function makePayment($isFirst = false, $request, $isRecurring = false, $token = null, $tokenType = null, $isRequest = true) {
-        $fp = fopen('res.txt', 'w');
-        fwrite($fp, json_encode($request->bodyParams));
-        fclose($fp);
-        $this->setAuths($request->getBodyParam("craftId"));
+        // $fp = fopen('res.txt', 'w');
+        // fwrite($fp, json_encode($request->bodyParams ? $request->bodyParams : $request));
+        // fclose($fp);
+        // $fp = fopen('wykonwywanie_platnosci.txt', 'w');
+        // fwrite($fp, "<pre>".print_r($isRequest ? $request>bodyParams : $request, true)."</pre>");
+        // fclose($fp);
+        $this->setAuths($isRequest ? $request->getBodyParam("craftId") : $request["craftId"], true);
         $payment = new Payment();
         if ($isRequest) {
             $payment -> setAttribute('project', $request -> getBodyParam("project"));
@@ -120,16 +130,16 @@ class Payu extends Component
             $payment -> setAttribute('status', "WAITING");
             $payment -> save();
         } else {
-            $payment -> setAttribute('project', $request -> project);
-            $payment -> setAttribute('title', $request -> title);
-            $payment -> setAttribute('firstName', $request -> firstName);
-            $payment -> setAttribute('lastName', $request -> lastName);
-            $payment -> setAttribute('email', $request -> email);
-            $payment -> setAttribute('amount', $request -> amount);
-            $payment -> setAttribute('currency', $request -> currency);
-            $payment -> setAttribute('language', $request -> language);
+            $payment -> setAttribute('project', $request["project"]);
+            $payment -> setAttribute('title', $request["title"]);
+            $payment -> setAttribute('firstName', $request["firstName"]);
+            $payment -> setAttribute('lastName', $request["lastName"]);
+            $payment -> setAttribute('email', $request["email"]);
+            $payment -> setAttribute('amount', $request["amount"]);
+            $payment -> setAttribute('currency', $request["currency"]);
+            $payment -> setAttribute('language', $request["language"]);
             $payment -> setAttribute('isRecurring', $isRecurring);
-            $payment -> setAttribute('recurringId', $request -> id ? $request -> id : 0);
+            $payment -> setAttribute('recurringId', $request["id"] ? $request["id"] : 0);
             $payment -> setAttribute('provider', 1);
             $payment -> setAttribute('status', "WAITING");
             $payment -> save();
@@ -142,17 +152,19 @@ class Payu extends Component
         $order['description'] = $payment -> title;
         $order['currencyCode'] = $payment -> currency;
         $order['totalAmount'] = $payment -> amount * 100;
-        $order['extOrderId'] = $payment -> uid;
+        $order['extOrderId'] = $payment["uid"];
+
+        $extCustomerId = $isRecurring ? $request["uid"] : $payment["uid"];
 
         // Czy trzeba te pola? Nie wiem, ale co szkodzi wysłać Polakowi?
-        //$order['email'] = $payment -> email;
-        //$order['extCustomerId'] = $payment -> uid;
+        $order['email'] = $payment -> email;
+        $order['extCustomerId'] = $extCustomerId;
 
         $order['products'][0]['name'] = $payment -> project;
         $order['products'][0]['unitPrice'] = $payment -> amount * 100;
         $order['products'][0]['quantity'] = 1;
 
-        $order['buyer']['extCustomerId'] = $payment -> uid;
+        $order['buyer']['extCustomerId'] = $extCustomerId;
         $order['buyer']['email'] = $payment -> email;
         $order['buyer']['firstName'] = $payment -> firstName;
         $order['buyer']['lastName'] = $payment -> lastName;
@@ -167,17 +179,19 @@ class Payu extends Component
 
         $recurringId = $payment->recurringId;
 
-        // TODO: Wysyłka maila o pomyślnej płatności. Siema, wykonaliśmy wpłate na jakis tam projekt cos tam cos tam.
         Payments::instance()->sendEmail(
             $payment->email,
             false,
-            $isRecurring ? "\nChcesz anulowac subskrypcję? Kliknij w link!".Craft::$app->config->general->cancelSubscription."?id=".
-                $recurringId
+            $isRecurring 
+                ? "\nChcesz anulowac subskrypcję? Kliknij w link!".Craft::$app->config->general->cancelSubscription."?id=".$recurringId
                 : "",
                 $payment->firstName,
                 $payment->project);
-//        return $order;
-
+                
+        
+        $fp = fopen('order.txt', 'w');
+        fwrite($fp, "<pre>".print_r($order, true)."</pre>");
+        fclose($fp);
         $responseObj = OpenPayU_Order :: create($order);
         $response = $responseObj -> getResponse();
 
@@ -195,21 +209,21 @@ class Payu extends Component
     }
 
     public function getCardToken($recurringPayment) {
-        $this->setAuths(null);
+        $this->setAuths($recurringPayment["craftId"], true);
         $endpointDomain = self :: ENVIRONMENT === 'secure' ? 'secure' : 'secure.snd';
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, "https://" . $endpointDomain . ".payu.com/pl/standard/user/oauth/authorize");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HEADER, FALSE);
         curl_setopt($ch, CURLOPT_POST, TRUE);
-
+        
         $oAuthClientId = OpenPayU_Configuration :: getOauthClientId();
         $oAuthClientSecret = OpenPayU_Configuration :: getOauthClientSecret();
         $email = $recurringPayment['email'];
         $customerId = $recurringPayment['uid'];
 
         $authString = "grant_type=trusted_merchant&client_id=$oAuthClientId&client_secret=$oAuthClientSecret&email=$email&ext_customer_id=$customerId";
-//        return $authString;
+        echo $authString;
 
         curl_setopt($ch, CURLOPT_POSTFIELDS, $authString);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
@@ -218,8 +232,6 @@ class Payu extends Component
         $response = curl_exec($ch);
         curl_close($ch);
         $responseObj = json_decode($response);
-
-        return $responseObj;
 
         $accessToken = $responseObj->access_token;
         $ch = curl_init();
@@ -230,18 +242,20 @@ class Payu extends Component
         $response = curl_exec($ch);
         curl_close($ch);
 
-        return json_decode($response);
+        // $obj["card"] = json_decode($response)->cardTokens[0]->value;
+        // $obj["accessToken"] = $accessToken;
+
+        return array(json_decode($response)->cardTokens[0]->value, $accessToken);
     }
 
     // TODO: Cron co 0.5h
     public function monthlyPayment() {
-        $this -> setAuths(null);
         $recurringPayments = Recurring :: find() -> where(['provider' => 1]) -> andWhere(['and', ["active" => true]]) -> asArray() -> all();
         foreach($recurringPayments as $recurringPayment) {
+            $this -> setAuths($recurringPayment["craftId"], true);
             $endpointDomain = self :: ENVIRONMENT === 'secure' ? 'secure' : 'secure.snd';
             // 1. GET TOKEN
-            $accessToken = $this->getCardToken($recurringPayment, $endpointDomain);
-
+            $accessToken = $this->getCardToken($recurringPayment, $endpointDomain)[0];
             $email = $recurringPayment["email"];
 
             // TODO: Jeśli minęło 30 dni od lastNotification w tabeli recurring to wysyłamy maila z linkiem do anulowania subskrybcji.
@@ -254,7 +268,7 @@ class Payu extends Component
             }
             // Tu po pobraniu tokenów będzie płatność cykliczna.
             if(strtotime($recurringPayment['lastPayment']) < strtotime('-30 days')) {
-                $this->makePayment(false, $recurringPayment, true, $accessToken, $tokenType = null, $isRequest = true);
+                $this->makePayment(false, $recurringPayment, true, $accessToken, "CARD_TOKEN", false);
             }
         }
     }

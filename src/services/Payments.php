@@ -116,7 +116,7 @@ class Payments extends Component
 
         if ($request->getBodyParam('provider') == '1') {
             $response = Payu::instance()->makePayment(false, $request);
-
+        
             return $response;
         } else {
             $response = Paypal::instance()->payment($request);
@@ -300,12 +300,12 @@ class Payments extends Component
         return [
             'columns' => $this -> getRecursiveColumns(),
             'entries' => $entries,
-            'isRecurring' => true,
-//            'sum' => array_reduce($entries, "self::sum"),
-//            'sumMonth' => array_reduce($entriesMonth, "self::sum"),
-//            'sumYear' => array_reduce($entriesYear, "self::sum"),
-//            'sumTotal' => array_reduce($entriesTotal, "self::sum"),
-//            'sumFilter' => array_reduce($query->asArray()->all(), "self::sum"),
+        //     'isRecurring' => true,
+        //    'sum' => array_reduce($entries, "self::sum"),
+        //    'sumMonth' => array_reduce($entriesMonth, "self::sum"),
+        //    'sumYear' => array_reduce($entriesYear, "self::sum"),
+        //    'sumTotal' => array_reduce($entriesTotal, "self::sum"),
+        //    'sumFilter' => array_reduce($query->asArray()->all(), "self::sum"),
             'sortBy' => $sortBy,
             'sortOrder' => $sortOrder,
             'page' => $page,
@@ -325,7 +325,16 @@ class Payments extends Component
         if ($recursivePayment->provider == 1) {
             $token = Payu::instance()->getCardToken($recursivePayment);
             // TODO: request na usuwanie otrzymanego tokenu z payu
-            return $token;
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, "https://secure.payu.com/api/v2_1/tokens/".$token[0]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+            curl_setopt($ch, CURLOPT_HEADER, FALSE);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: Bearer $token[1]"));
+            $response = curl_exec($ch);
+            curl_close($ch);
+
+            return $response;
         }
 
         $recursivePayment->save();

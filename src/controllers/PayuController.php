@@ -8,6 +8,7 @@ use Craft;
 use craft\web\Controller;
 use pleodigital\pmmpayments\Pmmpayments;
 use pleodigital\pmmpayments\services\Payments;
+use pleodigital\pmmpayments\services\Payu;
 
 class PayuController extends Controller
 {
@@ -20,7 +21,7 @@ class PayuController extends Controller
             fwrite($fp, "0");
             fclose($fp);
             $request = Craft :: $app -> getRequest();
-            $response = Pmmpayments :: $plugin -> payu -> paymentRecursive( $request );
+            $response = Payu::instance()-> paymentRecursive( $request );
             echo json_encode($request->bodyParams);
             return $this -> asJson($response);
         } catch (Exception $e) {
@@ -32,7 +33,7 @@ class PayuController extends Controller
     {
         try {
             $request = Craft :: $app -> getRequest();
-            $response = Pmmpayments :: $plugin -> payu -> checkStatus( $request );
+            $response = Payu::instance()-> checkStatus( $request );
 
             return $this -> asJson($response);
         } catch (Exception $e) {
@@ -43,7 +44,7 @@ class PayuController extends Controller
     public function actionEd2a2a984c0289c0a1ddb44029121abcd()
     {
         try {
-            $response = Pmmpayments :: $plugin -> payu -> monthlyPayment();
+            $response = Payu::instance()->monthlyPayment();
             return $this -> asJson($response);
         } catch (Exception $e) {
             return 'Saving data went wrong.';
@@ -54,7 +55,7 @@ class PayuController extends Controller
     {
         try {
             $request = Craft :: $app -> getRequest();
-            $response = Pmmpayments :: $plugin -> payu -> cancelSubscription( $request );
+            $response = Payu::instance()-> cancelSubscription( $request );
 
             return $this -> asJson($response);
         } catch (Exception $e) {

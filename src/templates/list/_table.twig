@@ -46,7 +46,7 @@
 
     <hr>
 
-     {% if not list.isRecurring %}
+     {% if list.sumFilter is defined %}
     <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat z wybranymi filtrami:</b> {{ list.sumFilter | number_format(2) }} PLN</p>
     <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat wyświetlanych na stronie:</b> {{ list.sum | number_format(2) }} PLN</p>
     <p style="text-align: right; margin: 15px 0; font-size: 18px; padding-right: 20px;"><b>Suma wpłat w tym miesiącu:</b> {{ list.sumMonth | number_format(2) }} PLN</p>
