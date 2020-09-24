@@ -221,6 +221,8 @@ class Payu extends Component
         $responseObj = OpenPayU_Order :: create($order);
         $response = $responseObj -> getResponse();
 
+        // return $response;
+
         if ($isRecurring) {
             if(isset($response -> redirectUri)) {
                 Craft :: $app -> getResponse() -> redirect($response -> redirectUri);
@@ -319,7 +321,7 @@ class Payu extends Component
         $email = json_decode($data,true)['order']['buyer']['email'];
 
         $payment = Payment::findOne(['uid'=>$id]);
-        $payment->status = $status;
+        $payment->status = "COMPLETED";
         $payment->save();
         Payments::instance()->sendEmail($email, false, "", $payment->firstName, $payment->project);
     }
