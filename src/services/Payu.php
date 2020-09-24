@@ -287,7 +287,7 @@ class Payu extends Component
 
             // TODO: Jeśli minęło 30 dni od lastNotification w tabeli recurring to wysyłamy maila z linkiem do anulowania subskrybcji.
             // Siema, za 7 dni przeprowadzimy płątnośc za tyle i tyle szekli na to i to, jesli chcesz anulować to kliknij se tu.
-            if(strtotime($recurringPayment['lastNotification']) < strtotime('-30 minutes')) {
+            if(strtotime($recurringPayment['lastNotification']) < strtotime('-30 days')) {
                 $model = Recurring::findOne(["id" => $recurringPayment["id"]]);
                 $model->setAttribute("lastNotification", date("Y-m-d H:i:s"));
                 $model -> setAttribute('cancelHash', uniqid(uniqid(), true));
@@ -295,7 +295,7 @@ class Payu extends Component
                 Payments::instance()->sendEmail($email, true, "\nChcesz anulowac subskrypcję? Kliknij w link! ".Craft::$app->config->general->cancelSubscription."?id=".$model->cancelHash, $recurringPayment["firstName"], $recurringPayment["project"]);
             }
             // Tu po pobraniu tokenów będzie płatność cykliczna.
-            if(strtotime($recurringPayment['lastPayment']) < strtotime('-30 minutes')) {
+            if(strtotime($recurringPayment['lastPayment']) < strtotime('-30 days')) {
                 $model = Recurring::findOne(["id" => $recurringPayment["id"]]);
                 $this->makePayment(false, $model, true, $accessToken, "CARD_TOKEN", false);
                 $model->setAttribute("lastPayment", date("Y-m-d H:i:s"));
