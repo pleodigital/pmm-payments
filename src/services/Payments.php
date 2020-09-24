@@ -127,7 +127,7 @@ class Payments extends Component
         return true;
     }
 
-    public function getAllMonthsTotal($projectFilter = "%", $startRangeFilter = "%", $endRangeFilter = "%") {
+    public function getAllMonthsTotal($projectFilter = "%", $startRangeFilter = "%", $endRangeFilter = "%", $paymentType = 3) {
         // $sql = "SELECT YEAR(dateCreated) as year,
         //     MONTH(dateCreated) as month,
         //     SUM(amount) AS total
@@ -144,6 +144,9 @@ class Payments extends Component
 
         if ($startRangeFilter && $endRangeFilter) {
             $sql .= " AND (dateCreated BETWEEN '$startRangeFilter' AND '$endRangeFilter')";
+        }
+        if ($paymentType != 3) {
+            $sql .= " AND isRecurring = '$paymentType'";
         }
         $sql .= " AND status='COMPLETED'
         GROUP BY YEAR(dateCreated), MONTH(dateCreated)";
@@ -319,7 +322,7 @@ class Payments extends Component
 
 
     public function cancelSubscription($id) {
-        $recursivePayment = Recurring::findOne(["id" => $id]);
+        $recursivePayment = Recurring::findOne(["cancelHash" => $id]);
         $recursivePayment->active = 0;
 
         if ($recursivePayment->provider == 1) {
@@ -330,16 +333,17 @@ class Payments extends Component
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
             curl_setopt($ch, CURLOPT_HEADER, FALSE);
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: Bearer $token[1]"));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: Bearer ".$token[1]));
             $response = curl_exec($ch);
             curl_close($ch);
-
-            return $response;
+            // return $response;
         }
 
         $recursivePayment->save();
 
-        return $recursivePayment;
+        // return $recursivePayment;
+        Craft :: $app -> getResponse() -> redirect(Craft :: $app -> config -> general -> payUPaymentCancelPage);
+
     }
 
 

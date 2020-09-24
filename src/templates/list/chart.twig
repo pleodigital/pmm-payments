@@ -10,7 +10,7 @@
 {% set endRangeFilter = craft.app.request.getQueryParam('endRangeFilter') ? craft.app.request.getQueryParam('endRangeFilter') : null %}
 {% set paymentType = craft.app.request.getQueryParam('paymentType') ? craft.app.request.getQueryParam('paymentType') : null %}
 
-{% set totals = craft.payments.getAllMonthsTotal(projectFilter, startRangeFilter, endRangeFilter) %}
+{% set totals = craft.payments.getAllMonthsTotal(projectFilter, startRangeFilter, endRangeFilter, paymentType) %}
 
 {% macro jsVar(variable, jsVariableName) %}
     var {{jsVariableName}} = {{variable|json_encode|raw}};

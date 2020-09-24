@@ -100,7 +100,7 @@ var pmmPayments = {
 
     onSubCancel: function(event) {
         $.get(`${event.target.dataset.href}?id=${event.target.dataset.id}`, function(res) {
-            console.log(res);
+            // console.log(event);
             pmmPayments.loadEntries();
         });
     },
@@ -151,6 +151,12 @@ var pmmPayments = {
         if(this.monthFilter) {
             url += 'monthFilter=' + this.monthFilter + '&';
         }
+        if (typeof this.paymentTypeFilter === "object" && this.paymentTypeFilter == null) { 
+            url += "paymentType=" + 3 + "&";
+        } else {
+            console.log("paymentType");
+            url += 'paymentType=' + this.paymentTypeFilter + '&';
+        }
         $.get(url, function(html) {
             $('.content-pane .main .elements').html(html);
             $('.content-pane .main .elements').removeClass('busy');
@@ -160,6 +166,7 @@ var pmmPayments = {
     onChangePaymentsList: function(event) {
         $(".sortmenubtn").show();
         $(".month-filter-name").show();
+        $(".payment-type-filter-name").show();
         event.preventDefault();
         $(pmmPayments.subNav).not(this).removeClass('sel');
         $(this).addClass('sel');
@@ -210,8 +217,10 @@ var pmmPayments = {
         pmmPayments.projectFilter = null;
         pmmPayments.startRangeFilter = null;
         pmmPayments.endRangeFilter = null;
+        pmmPayments.paymentTypeFilter = null;
         $('.project-filter-name').text("Filtruj po projektach");
         $('.range-filter-name').text("Filtruj po dacie");
+        $('.payment-type-filter-name').text("Filtruj po rodzaju płatności");
         $('ul.filters li a.sel').not(this).removeClass('sel');
     },
 
@@ -258,7 +267,9 @@ var pmmPayments = {
         if(this.endRangeFilter) {
             url += 'endRangeFilter=' + this.endRangeFilter + '&';
         }
-        if(this.paymentTypeFilter == 0 || this.paymentTypeFilter == 1) {
+        if (typeof this.paymentTypeFilter === "object" && this.paymentTypeFilter == null) { 
+            url += "paymentType=" + 3 + "&";
+        } else {
             console.log("paymentType");
             url += 'paymentType=' + this.paymentTypeFilter + '&';
         }

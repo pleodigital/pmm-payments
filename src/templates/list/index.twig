@@ -7,40 +7,40 @@
 {% set yearFilters = craft.payments.getYearFilterOptions() %}
 {% set monthFilters = craft.payments.getMonthFilterOptions() %}
     <div id="toolbar" class="flex flex-nowrap">
-{#         <div>#}
-{#            <div class="btn menubtn statusmenubtn" tabindex="0" role="combobox" aria-owns="menu.Garnish685367686" aria-haspopup="true" aria-expanded="false">#}
-{#                <span class="status"></span>Wszystkie#}
-{#            </div>#}
+        {# <div>
+           <div class="btn menubtn statusmenubtn" tabindex="0" role="combobox" aria-owns="menu.Garnish685367686" aria-haspopup="true" aria-expanded="false">
+               <span class="status"></span>Wszystkie
+           </div>
 
-{#            {{ forms.selectField({#}
-{#                name: 'defaultPageLength',#}
-{#                class: 'sortmenubtn',#}
-{#                options: sortOptions,#}
-{#            }) }}#}
-{#        </div>#}
-{#        <div class="flex-grow texticon search icon clearable">#}
-{#            <input type="text" class="text fullwidth" autocomplete="off" placeholder="Szukaj">#}
-{#            <div class="clear hidden" title="Wyczyść"></div>#}
-{#        </div>#}
-{#        <div>#}
-{#            <div class="btn menubtn sortmenubtn" data-icon="desc">Data płatności</div>#}
-{#            <div class="menu">#}
-{#                <ul class="padded sort-attributes" role="listbox" aria-hidden="true">#}
-{#                    {% for sortOption in sortOptions %}#}
-{#                        <li>#}
-{#                            <a class="{{ sortOption.selected is defined and sortOption.selected ? 'sel' }}" data-sort-by="{{sortOption.value}}" role="option" tabindex="-1" id="null-option-{{ loop.index0 }}">#}
-{#                                {{ sortOption.label }}#}
-{#                            </a>#}
-{#                        </li>#}
-{#                    {% endfor %}#}
-{#                </ul>#}
-{#                <hr>#}
-{#                <ul class="padded sort-directions" role="listbox" id="menu.Garnish740013346" aria-hidden="true">#}
-{#                    <li><a data-sort-order="ASC" class="" role="option" tabindex="-1" id="null-option-2">Rosnąco</a></li>#}
-{#                    <li><a data-sort-order="DESC" role="option" tabindex="-1" id="null-option-3" class="sel">Malejąco</a></li>#}
-{#                </ul>#}
-{#            </div>#}
-{#        </div>#}
+           {{ forms.selectField({
+               name: 'defaultPageLength',
+               class: 'sortmenubtn',
+               options: sortOptions,
+           }) }}
+       </div> #}
+       {# <div class="flex-grow texticon search icon clearable">
+           <input type="text" class="text fullwidth" autocomplete="off" placeholder="Szukaj">
+           <div class="clear hidden" title="Wyczyść"></div>
+       </div> #}
+       <div>
+           <div class="btn menubtn sortmenubtn" data-icon="desc">Data płatności</div>
+           <div class="menu">
+               <ul class="padded sort-attributes" role="listbox" aria-hidden="true">
+                   {% for sortOption in sortOptions %}
+                       <li>
+                           <a class="{{ sortOption.selected is defined and sortOption.selected ? 'sel' }}" data-sort-by="{{sortOption.value}}" role="option" tabindex="-1" id="null-option-{{ loop.index0 }}">
+                               {{ sortOption.label }}
+                           </a>
+                       </li>
+                   {% endfor %}
+               </ul>
+               <hr>
+               <ul class="padded sort-directions" role="listbox" id="menu.Garnish740013346" aria-hidden="true">
+                   <li><a data-sort-order="ASC" class="" role="option" tabindex="-1" id="null-option-2">Rosnąco</a></li>
+                   <li><a data-sort-order="DESC" role="option" tabindex="-1" id="null-option-3" class="sel">Malejąco</a></li>
+               </ul>
+           </div>
+       </div>
         <div>
             <div class="btn menubtn project-filter-name">Filtruj po projektach</div>
             <div class="menu">
