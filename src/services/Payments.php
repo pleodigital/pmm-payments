@@ -171,7 +171,7 @@ class Payments extends Component
     public function getPayPalPayments($page, $sortBy, $sortOrder, $projectFilter, $startRangeFilter, $endRangeFilter, $paymentTypeFilter)
     {
         $provider = 2;
-        return $this -> getEntries($provider, $page, $sortBy, $sortOrder, $startRangeFilter, $endRangeFilter, $paymentTypeFilter);
+        return $this -> getEntries($provider, $page, $sortBy, $sortOrder, $projectFilter, $startRangeFilter, $endRangeFilter, $paymentTypeFilter);
     }
 
     public function getRecursivePayments($page, $sortBy, $sortOrder, $projectFilter, $startRangeFilter, $endRangeFilter)
@@ -390,6 +390,7 @@ class Payments extends Component
         if ($projectFilter) {
             array_push($filters, "project = '$projectFilter'");
         }
+        // echo print($projectFilter);
         if ($paymentType == 0 || $paymentType == 1) {
             array_push($filters, "isRecurring = '$paymentType'");
         }
