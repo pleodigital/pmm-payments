@@ -224,7 +224,7 @@ class Paypal extends Component
         $payment -> setAttribute('amount', $request -> getBodyParam("totalAmount"));
         $payment -> setAttribute('currency', $request -> getBodyParam("currencyCode"));
         $payment -> setAttribute('language', $request -> getBodyParam("language"));
-        $payment -> setAttribute('isRecurring', true);
+        $payment -> setAttribute('isRecurring', false);
         $payment -> setAttribute('recurringId', $request -> getBodyParam("id") ? $request->getBodyParam("id") : 0);
         $payment -> setAttribute('provider', 2);
         $payment -> setAttribute('status', "WAITING");

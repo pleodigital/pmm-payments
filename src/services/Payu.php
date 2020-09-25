@@ -204,15 +204,6 @@ class Payu extends Component
                 $request->save();
             } 
         }
-
-        Payments::instance()->sendEmail(
-            $payment->email,
-            false,
-            $isRecurring 
-                ? "\nChcesz anulowac subskrypcję? Kliknij w link! ".Craft::$app->config->general->cancelSubscription."?id=".$request["cancelHash"]
-                : "",
-                $payment->firstName,
-                $payment->project);
                 
         
         $fp = fopen('order.txt', 'w');
@@ -224,6 +215,14 @@ class Payu extends Component
         // return $response;
 
         if ($isRecurring) {
+            Payments::instance()->sendEmail(
+                $payment->email,
+                false,
+                $isRecurring 
+                    ? "\nChcesz anulowac subskrypcję? Kliknij w link! ".Craft::$app->config->general->cancelSubscription."?id=".$request["cancelHash"]
+                    : "",
+                    $payment->firstName,
+                    $payment->project);
             if(isset($response -> redirectUri)) {
                 Craft :: $app -> getResponse() -> redirect($response -> redirectUri);
             } else {
@@ -310,7 +309,7 @@ class Payu extends Component
         $body = file_get_contents('php://input');
         $data = trim($body);
         $json = json_decode(json_decode(json_encode($data)));
-        $file = fopen("paypal.txt", 'w');
+        $file = fopen("payuRes.txt", 'w');
         fwrite($file, $data);
 
         $body = file_get_contents('php://input');
