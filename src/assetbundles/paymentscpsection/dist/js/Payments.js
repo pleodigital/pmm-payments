@@ -163,6 +163,38 @@ var pmmPayments = {
         })
     },
 
+    onExport: function(event) {
+        event.preventDefault();
+        var url = event.target.dataset.href;
+        if (url.includes("page")) {
+            url += '&';
+        } else {
+            url += '?';
+        }
+        console.log(this.projectFilter, this.yearFilter, this.monthFilter);
+        if(this.sortBy) {
+            url += 'sortBy=' + this.sortBy + '&'; 
+        } 
+        if(this.sortOrder) {
+            url += 'sortOrder=' + this.sortOrder + '&'; 
+        }
+        if(this.projectFilter) {
+            url += 'projectFilter=' + this.projectFilter + '&';
+        }
+        if(this.startRangeFilter) {
+            url += 'startRangeFilter=' + this.startRangeFilter + '&';
+        }
+        if(this.endRangeFilter) {
+            url += 'endRangeFilter=' + this.endRangeFilter + '&';
+        }
+        if (typeof this.paymentTypeFilter === "object" && this.paymentTypeFilter == null) { 
+            url += "paymentType=" + 3 + "&";
+        } else {
+            url += 'paymentType=' + this.paymentTypeFilter + '&';
+        }
+        console.log(url);
+    },
+
     onChangePaymentsList: function(event) {
         $(".sortmenubtn").show();
         $(".month-filter-name").show();
@@ -171,7 +203,7 @@ var pmmPayments = {
         $(pmmPayments.subNav).not(this).removeClass('sel');
         $(this).addClass('sel');
         pmmPayments.clearFilters();
-        pmmPayments.loadEntries(this);         
+        pmmPayments.loadEntries(this);
     },
 
     onRefreshEntries: function(event) {
@@ -283,6 +315,7 @@ var pmmPayments = {
             } else {
                 $("#toolbar").show();
             }
+            // $("#export-btn").click(pmmPayments.onExport);
             console.log("CANCEL", $(".sub-cancel"));
             if ($(".sub-cancel").length) {
                 console.log("true");

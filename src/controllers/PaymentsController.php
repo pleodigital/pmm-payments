@@ -50,7 +50,7 @@ class PaymentsController extends Controller
      *         The actions must be in 'kebab-case'
      * @access protected
      */
-    protected $allowAnonymous = ['index', 'cancel-subscription'];
+    protected $allowAnonymous = ['index', 'export-csv', 'cancel-subscription'];
 
     // Public Methods
     // =========================================================================
@@ -86,7 +86,13 @@ class PaymentsController extends Controller
     {
         try {
             $request = Craft :: $app -> getRequest();
-            $response = Pmmpayments :: $plugin -> payments -> exportCsv($request -> getQueryParam('provider'));
+            $response = Pmmpayments :: $plugin -> payments -> exportCsv(
+                $request -> getQueryParam('provider'),
+                $request -> getQueryParam("project"),
+                $request -> getQueryParam("startRange"),
+                $request -> getQueryParam("endRange"),
+                $request -> getQueryParam("paymentType"),
+            );
         } catch (Exception $e) {
             return 'Exporting went wrong.';
         }

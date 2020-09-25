@@ -220,27 +220,45 @@ class Payments extends Component
         ];
     }
 
-    public function exportCsv($providerName)
+    public function exportCsv($provider, $projectFilter, $startRangeFilter, $endRangeFilter, $paymentTypeFilter)
     {
-        $provider = $this -> getProviderByName($providerName);
-        $entries = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "status='COMPLETED'"]) -> asArray() -> all();
+        $filters = ['and', "status = 'COMPLETED'"];
+        $query;
+
+
+        if ($projectFilter) {
+            array_push($filters, "project = '$projectFilter'");
+        }
+
+        if ($paymentTypeFilter == 0 || $paymentTypeFilter == 1) {
+            array_push($filters, "isRecurring = '$paymentTypeFilter'");
+        }
+        if ($startRangeFilter && $endRangeFilter) {
+            $start = date($startRangeFilter);
+            $end = date("Y-m-d", strtotime($endRangeFilter.' +1 day'));
+            $query = Payment::find()->where(['provider' => $provider])->andWhere($filters)->andWhere(["between", "dateCreated", $start, $end]) -> asArray() -> all();;
+        } else {
+            $query = Payment::find()->where(['provider' => $provider])->andWhere($filters) -> asArray() -> all();;
+        }
+
+        // $query = Payment :: find() -> where(['provider' => $provider]) -> andWhere(['and', "status='COMPLETED'"]) -> asArray() -> all();
 
         $writer = Writer :: createFromFileObject(new SplTempFileObject());
-        $writer -> insertOne(array_keys($entries[0]));
-        $writer -> insertAll($entries);
-        $writer -> output('payments-' . $providerName . '.csv');
+        $writer -> insertOne(array_keys($query[0]));
+        $writer -> insertAll($query);
+        $writer -> output('payments-' . $this->getNameByProviderId($provider) . '.csv');
         exit(0);
     }
 
-    private function getProviderByName($providerName)
+    private function getNameByProviderId($providerName)
     {
         $provider = 3;
         switch($providerName) {
-            case 'payu':
-                $provider = 1;
+            case 1:
+                $provider = "payu";
                 break;
-            case 'paypal':
-                $provider = 2;
+            case 2:
+                $provider = "paypal";
                 break;
         }
         return $provider;

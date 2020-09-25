@@ -3,7 +3,6 @@
 
 {% set baseUrl = pluginName ~ '/list/' %}
 {% set baseEntriesUrl = cpUrl(baseUrl ~ providerName) %}
-{% set exportCsvUrl = siteUrl ~ 'actions/' ~ pluginName ~ '/payments/export-csv?provider=' ~ providerName %}
 
 {% set page = craft.app.request.getQueryParam('page') ? craft.app.request.getQueryParam('page') : 1 %}
 {% set sortBy = craft.app.request.getQueryParam('sortBy') ? craft.app.request.getQueryParam('sortBy') : 'dateCreated' %}
@@ -16,4 +15,10 @@
 {% set paymentType = craft.app.request.getQueryParam('paymentType') ? craft.app.request.getQueryParam('paymentType') : null %}
 {% set list = craft.payments.getPayUPayments(page, sortBy, sortOrder, projectFilter, startRangeFilter, endRangeFilter, paymentType) %}
 {#{{ list }}#}
+{% set exportCsvUrl = siteUrl ~ 'actions/' ~ pluginName ~ 
+    '/payments/export-csv?provider=1&project=' ~ projectFilter ~ 
+    '&startRange=' ~ startRangeFilter ~
+    '&endRange=' ~ endRangeFilter ~
+    '&paymentType=' ~ paymentType %}
+    
 {% include "pmm-payments/list/_table" %}

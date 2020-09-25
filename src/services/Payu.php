@@ -20,7 +20,7 @@ class Payu extends Component
             $craftId = strval($craftId);
         }
         $fp = fopen('res.txt', 'w');
-        fwrite($fp, json_encode($craftId));
+        fwrite($fp, json_encode($craftId,true));
         fclose($fp);
 
         if(!$craftId) {
@@ -36,10 +36,10 @@ class Payu extends Component
                 $oAuthClientId = $entry -> cyklicznePayuIdentyfikator;
                 $oAuthClientSecret = $entry -> cyklicznePayuOAuth;
             } else {
-                $merchantPosId = $entry -> identyfikatorWplaty;
-                $signatureKey = $entry -> payuDrugiKlucz;
-                $oAuthClientId = $entry -> identyfikatorWplaty;
-                $oAuthClientSecret = $entry -> payuOAuth;
+                $merchantPosId = $entry -> identyfikatorWplaty ? $entry -> identyfikatorWplaty : $entry -> wplatyIdentyfikatorWplaty;
+                $signatureKey = $entry -> payuDrugiKlucz ? $entry -> payuDrugiKlucz : wplatyPayuDrugiKlucz;
+                $oAuthClientId = $entry -> identyfikatorWplaty ? $entry -> identyfikatorWplaty : $entry -> wplatyIdentyfikatorWplaty;
+                $oAuthClientSecret = $entry -> payuOAuth ? $entry -> payuOAuth : wplatyPayuOAuth;
             }
         } else {
             $entry = \craft\elements\Entry :: find() -> id($craftId) -> one();
@@ -50,10 +50,10 @@ class Payu extends Component
                 $oAuthClientId = $entry -> cyklicznePayuIdentyfikator ? $entry -> cyklicznePayuIdentyfikator : $entry -> wplatyPayuCykliczneAutoryzacja;
                 $oAuthClientSecret = $entry -> cyklicznePayuOAuth ? $entry -> cyklicznePayuOAuth : $entry -> wplatyPayuCykliczneOAuth;
             } else {
-                $merchantPosId = $entry -> identyfikatorWplaty;
-                $signatureKey = $entry -> payuDrugiKlucz;
-                $oAuthClientId = $entry -> identyfikatorWplaty;
-                $oAuthClientSecret = $entry -> payuOAuth;
+                $merchantPosId = $entry -> identyfikatorWplaty ? $entry -> identyfikatorWplaty : $entry -> wplatyIdentyfikatorWplaty;
+                $signatureKey = $entry -> payuDrugiKlucz ? $entry -> payuDrugiKlucz : wplatyPayuDrugiKlucz;
+                $oAuthClientId = $entry -> identyfikatorWplaty ? $entry -> identyfikatorWplaty : $entry -> wplatyIdentyfikatorWplaty;
+                $oAuthClientSecret = $entry -> payuOAuth ? $entry -> payuOAuth : wplatyPayuOAuth;
             }
         }
 
@@ -135,7 +135,7 @@ class Payu extends Component
         // $fp = fopen('wykonwywanie_platnosci.txt', 'w');
         // fwrite($fp, "<pre>".print_r($isRequest ? $request>bodyParams : $request, true)."</pre>");
         // fclose($fp);
-        $this->setAuths($isRequest ? $request->getBodyParam("craftId") : $request["craftId"], true);
+        $this->setAuths($isRequest ? $request->getBodyParam("craftId") : $request["craftId"], $isRecurring);
         $payment = new Payment();
         if ($isRequest) {
             $payment -> setAttribute('project', $request -> getBodyParam("project"));
@@ -209,7 +209,7 @@ class Payu extends Component
             $payment->email,
             false,
             $isRecurring 
-                ? "\nChcesz anulowac subskrypcję? Kliknij w link!".Craft::$app->config->general->cancelSubscription."?id=".$request["cancelHash"]
+                ? "\nChcesz anulowac subskrypcję? Kliknij w link! ".Craft::$app->config->general->cancelSubscription."?id=".$request["cancelHash"]
                 : "",
                 $payment->firstName,
                 $payment->project);
