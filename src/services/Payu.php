@@ -37,13 +37,12 @@ class Payu extends Component
                 $oAuthClientSecret = $entry -> cyklicznePayuOAuth;
             } else {
                 $merchantPosId = $entry -> identyfikatorWplaty ? $entry -> identyfikatorWplaty : $entry -> wplatyIdentyfikatorWplaty;
-                $signatureKey = $entry -> payuDrugiKlucz ? $entry -> payuDrugiKlucz : wplatyPayuDrugiKlucz;
+                $signatureKey = $entry -> payuDrugiKlucz ? $entry -> payuDrugiKlucz : $entry -> wplatyPayuDrugiKlucz;
                 $oAuthClientId = $entry -> identyfikatorWplaty ? $entry -> identyfikatorWplaty : $entry -> wplatyIdentyfikatorWplaty;
-                $oAuthClientSecret = $entry -> payuOAuth ? $entry -> payuOAuth : wplatyPayuOAuth;
+                $oAuthClientSecret = $entry -> payuOAuth ? $entry -> payuOAuth : $entry -> wplatyPayuOAuth;
             }
         } else {
             $entry = \craft\elements\Entry :: find() -> id($craftId) -> one();
-            
             if ($isRecurring) {
                 $merchantPosId = $entry -> cyklicznePayuIdentyfikator ? $entry -> cyklicznePayuIdentyfikator : $entry -> wplatyPayuCykliczneAutoryzacja;
                 $signatureKey = $entry -> cyklicznePayuDrugiKlucz ? $entry -> cyklicznePayuDrugiKlucz : $entry -> wplatyPayuCykliczneDrugiKlucz;
@@ -51,9 +50,9 @@ class Payu extends Component
                 $oAuthClientSecret = $entry -> cyklicznePayuOAuth ? $entry -> cyklicznePayuOAuth : $entry -> wplatyPayuCykliczneOAuth;
             } else {
                 $merchantPosId = $entry -> identyfikatorWplaty ? $entry -> identyfikatorWplaty : $entry -> wplatyIdentyfikatorWplaty;
-                $signatureKey = $entry -> payuDrugiKlucz ? $entry -> payuDrugiKlucz : wplatyPayuDrugiKlucz;
+                $signatureKey = $entry -> payuDrugiKlucz ? $entry -> payuDrugiKlucz : $entry -> wplatyPayuDrugiKlucz;
                 $oAuthClientId = $entry -> identyfikatorWplaty ? $entry -> identyfikatorWplaty : $entry -> wplatyIdentyfikatorWplaty;
-                $oAuthClientSecret = $entry -> payuOAuth ? $entry -> payuOAuth : wplatyPayuOAuth;
+                $oAuthClientSecret = $entry -> payuOAuth ? $entry -> payuOAuth : $entry -> wplatyPayuOAuth;
             }
         }
 
@@ -75,6 +74,7 @@ class Payu extends Component
             -> andWhere(['and', ["email" => $request -> getBodyParam("email")]])
             -> one();
         if ($recurringPayment) {
+            Payments::instance()->cancelSubscription($recurringPayment->cancelHash);
             $recurringPayment -> setAttribute('project', $request -> getBodyParam('project'));
             $recurringPayment -> setAttribute('title', $request -> getBodyParam('title'));
             $recurringPayment -> setAttribute('firstName', $request -> getBodyParam('firstName'));
@@ -135,6 +135,7 @@ class Payu extends Component
         // $fp = fopen('wykonwywanie_platnosci.txt', 'w');
         // fwrite($fp, "<pre>".print_r($isRequest ? $request>bodyParams : $request, true)."</pre>");
         // fclose($fp);
+        $thanksPage = $isRecurring ? Craft :: $app -> config -> general -> payUPaymentStartPage : Craft :: $app -> config -> general -> payUPaymentThanksPage;
         $this->setAuths($isRequest ? $request->getBodyParam("craftId") : $request["craftId"], $isRecurring);
         $payment = new Payment();
         if ($isRequest) {
@@ -169,7 +170,7 @@ class Payu extends Component
         }
         $payment -> save();
 
-        $order['continueUrl'] = Craft :: $app -> config -> general -> payUPaymentThanksPage;
+        $order['continueUrl'] = $thanksPage;
         $order['notifyUrl'] = Craft :: $app -> config -> general -> paymentPayuStatus;
         $order['customerIp'] = $_SERVER['REMOTE_ADDR'];
         $order['merchantPosId'] = OpenPayU_Configuration :: getMerchantPosId();
@@ -228,7 +229,7 @@ class Payu extends Component
             } else {
                 $payment->setAttribute("status", "COMPLETED");
                 $payment->save();
-                Craft :: $app -> getResponse() -> redirect(Craft :: $app -> config -> general -> payUPaymentThanksPage);
+                Craft :: $app -> getResponse() -> redirect($thanksPage);
             }
         } else {
             return $response->redirectUri;
