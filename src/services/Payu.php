@@ -74,7 +74,9 @@ class Payu extends Component
             -> andWhere(['and', ["email" => $request -> getBodyParam("email")]])
             -> one();
         if ($recurringPayment) {
-            Payments::instance()->cancelSubscription($recurringPayment->cancelHash);
+            if ($recurringPayment->active === 1) {
+                Payments::instance()->cancelSubscription($recurringPayment->cancelHash);
+            }
             $recurringPayment -> setAttribute('project', $request -> getBodyParam('project'));
             $recurringPayment -> setAttribute('title', $request -> getBodyParam('title'));
             $recurringPayment -> setAttribute('firstName', $request -> getBodyParam('firstName'));
@@ -251,7 +253,7 @@ class Payu extends Component
         $customerId = $recurringPayment['uid'];
 
         $authString = "grant_type=trusted_merchant&client_id=$oAuthClientId&client_secret=$oAuthClientSecret&email=$email&ext_customer_id=$customerId";
-        // echo $authString;
+        // exit($authString);
 
         curl_setopt($ch, CURLOPT_POSTFIELDS, $authString);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
@@ -260,7 +262,6 @@ class Payu extends Component
         $response = curl_exec($ch);
         curl_close($ch);
         $responseObj = json_decode($response);
-        // exit(print_r($responseObj, true));
 
         $accessToken = $responseObj->access_token;
         $ch = curl_init();
@@ -270,6 +271,7 @@ class Payu extends Component
         curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: Bearer $accessToken"));
         $response = curl_exec($ch);
         curl_close($ch);
+        // exit(print_r($responseObj, true));
 
         // $obj["card"] = json_decode($response)->cardTokens[0]->value;
         // $obj["accessToken"] = $accessToken;
@@ -284,12 +286,12 @@ class Payu extends Component
             $this -> setAuths($recurringPayment["craftId"], true);
             $endpointDomain = self :: ENVIRONMENT === 'secure' ? 'secure' : 'secure.snd';
             // 1. GET TOKEN
-            $accessToken = $this->getCardToken($recurringPayment, $endpointDomain)[0];
             $email = $recurringPayment["email"];
 
             // TODO: Jeśli minęło 30 dni od lastNotification w tabeli recurring to wysyłamy maila z linkiem do anulowania subskrybcji.
             // Siema, za 7 dni przeprowadzimy płątnośc za tyle i tyle szekli na to i to, jesli chcesz anulować to kliknij se tu.
             if(strtotime($recurringPayment['lastNotification']) < strtotime('-30 days')) {
+                $accessToken = $this->getCardToken($recurringPayment, $endpointDomain)[0];
                 $model = Recurring::findOne(["id" => $recurringPayment["id"]]);
                 $model->setAttribute("lastNotification", date("Y-m-d H:i:s"));
                 $model -> setAttribute('cancelHash', uniqid(uniqid(), true));
@@ -298,6 +300,7 @@ class Payu extends Component
             }
             // Tu po pobraniu tokenów będzie płatność cykliczna.
             if(strtotime($recurringPayment['lastPayment']) < strtotime('-30 days')) {
+                $accessToken = $this->getCardToken($recurringPayment, $endpointDomain)[0];
                 $model = Recurring::findOne(["id" => $recurringPayment["id"]]);
                 $this->makePayment(false, $model, true, $accessToken, "CARD_TOKEN", false);
                 $model->setAttribute("lastPayment", date("Y-m-d H:i:s"));
@@ -321,8 +324,10 @@ class Payu extends Component
         $email = json_decode($data,true)['order']['buyer']['email'];
 
         $payment = Payment::findOne(['uid'=>$id]);
-        $payment->status = "COMPLETED";
-        $payment->save();
-        Payments::instance()->sendEmail($email, false, "", $payment->firstName, $payment->project);
+        if ($payment->status != "COMPLETED") {
+            $payment->status = "COMPLETED";
+            $payment->save();
+            Payments::instance()->sendEmail($email, false, "", $payment->firstName, $payment->project);
+        }
     }
 }

@@ -7,6 +7,7 @@ use craft\web\View;
 use OpenPayU_Configuration;
 use OpenPayU_Order;
 use OpenPayU_Retrieve;
+use OpenPayU_Token;
 use OauthGrantType;
 use PayPalCheckoutSdk\Core\PayPalHttpClient;
 use PayPalCheckoutSdk\Core\ProductionEnvironment;
@@ -341,11 +342,14 @@ class Payments extends Component
 
     public function cancelSubscription($id) {
         $recursivePayment = Recurring::findOne(["cancelHash" => $id]);
+        // exit(print_r($recursivePayment,true));
         $recursivePayment->active = 0;
 
         if ($recursivePayment->provider == 1) {
             $token = Payu::instance()->getCardToken($recursivePayment);
+
             // TODO: request na usuwanie otrzymanego tokenu z payu
+            // return OpenPayu_Token::delete($token[0]);
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, "https://secure.payu.com/api/v2_1/tokens/".$token[0]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
