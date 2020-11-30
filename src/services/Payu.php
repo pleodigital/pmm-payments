@@ -222,7 +222,7 @@ class Payu extends Component
                 $payment->email,
                 false,
                 $isRecurring 
-                    ? "\nChcesz anulowac subskrypcję? Kliknij w link! ".Craft::$app->config->general->cancelSubscription."?id=".$request["cancelHash"]
+                    ? "\nChcesz anulować subskrypcję? Kliknij w link! ".Craft::$app->config->general->cancelSubscription."?id=".$request["cancelHash"]
                     : "",
                     $payment->firstName,
                     $payment->project);
@@ -302,7 +302,7 @@ class Payu extends Component
                     $model->setAttribute("lastNotification", date("Y-m-d H:i:s"));
                     $model -> setAttribute('cancelHash', uniqid(uniqid(), true));
                     $model->save();
-                    Payments::instance()->sendEmail($email, true, "\nChcesz anulowac subskrypcję? Kliknij w link! ".Craft::$app->config->general->cancelSubscription."?id=".$model->cancelHash, $recurringPayment["firstName"], $recurringPayment["project"]);
+                    Payments::instance()->sendEmail($email, true, "\nChcesz anulować subskrypcję? Kliknij w link! ".Craft::$app->config->general->cancelSubscription."?id=".$model->cancelHash, $recurringPayment["firstName"], $recurringPayment["project"]);
                 }
             }
             // print("ERROR".$recurringPayment["id"]);
